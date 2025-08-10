@@ -17,7 +17,16 @@ def run_bot():
     """Chạy Telegram bot"""
     try:
         from src.bot.telegram_handler import TelegramKanbanBot
+        from src.config import settings
+        
         print("🤖 Khởi động Telegram Bot...")
+        
+        # Hiển thị thông tin proxy nếu có
+        if hasattr(settings, 'PROXY_ENABLED') and settings.PROXY_ENABLED:
+            print(f"🌐 Sử dụng proxy: {settings.PROXY_URL}")
+        else:
+            print("🌐 Không sử dụng proxy")
+        
         bot = TelegramKanbanBot()
         bot.run()
     except Exception as e:

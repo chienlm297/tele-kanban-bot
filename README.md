@@ -97,6 +97,24 @@ pip install -r requirements.txt
 ```bash
 # Copy config template
 cp src/config/example.py src/config/settings.py
+```
+
+### **3. 🌐 Cấu hình Proxy (Bắt buộc ở môi trường công ty)**
+Nếu bạn ở môi trường công ty cần proxy để kết nối internet:
+
+```python
+# Trong src/config/settings.py
+PROXY_ENABLED = True
+PROXY_HOST = "192.168.10.12"  # IP proxy server
+PROXY_PORT = 9999              # Port proxy server
+PROXY_USERNAME = ""            # Username nếu cần
+PROXY_PASSWORD = ""            # Password nếu cần
+```
+
+**Test proxy connection:**
+```bash
+python test_proxy.py
+```
 
 # Chỉnh sửa settings.py với thông tin của bạn:
 # - BOT_TOKEN: Lấy từ @BotFather

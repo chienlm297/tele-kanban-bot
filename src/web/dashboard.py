@@ -225,7 +225,12 @@ def send_telegram_reply(task, comment=None):
             'reply_to_message_id': message_id
         }
         
-        response = requests.post(url, json=data)
+        # Sử dụng proxy nếu được bật
+        if hasattr(settings, 'PROXY_ENABLED') and settings.PROXY_ENABLED:
+            print(f"🌐 Sử dụng proxy: {settings.PROXY_URL}")
+            response = requests.post(url, json=data, proxies=settings.PROXY_DICT, timeout=30)
+        else:
+            response = requests.post(url, json=data, timeout=30)
         
         if response.status_code == 200:
             print(f"✅ Đã gửi reply hoàn thành task #{task['id']} trong chat {chat_id} với comment: '{comment}'")

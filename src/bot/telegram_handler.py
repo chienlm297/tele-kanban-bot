@@ -399,7 +399,23 @@ class TelegramKanbanBot:
     
     def run(self):
         """Chạy bot"""
-        application = Application.builder().token(settings.BOT_TOKEN).build()
+        # Cấu hình proxy nếu được bật
+        if hasattr(settings, 'PROXY_ENABLED') and settings.PROXY_ENABLED:
+            logger.info(f"🌐 Sử dụng proxy: {settings.PROXY_URL}")
+            
+            # Cấu hình proxy cho python-telegram-bot
+            proxy_url = f"http://{settings.PROXY_HOST}:{settings.PROXY_PORT}"
+            
+            # Tạo application với proxy
+            application = (
+                Application.builder()
+                .token(settings.BOT_TOKEN)
+                .proxy_url(proxy_url)
+                .build()
+            )
+        else:
+            logger.info("🌐 Không sử dụng proxy")
+            application = Application.builder().token(settings.BOT_TOKEN).build()
         
         # Đăng ký handlers
         application.add_handler(CommandHandler("start", self.start_command))
