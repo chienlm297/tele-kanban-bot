@@ -407,6 +407,13 @@
             transform: translateX(0);
         }
         
+        /* Task removal animation */
+        .task-item.removing {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.3s ease;
+        }
+        
         /* AI insights header animation */
         .ai-insights {
             transition: all 0.3s ease;
@@ -1227,14 +1234,26 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Cập nhật UI mà không reload toàn bộ
-                    updateTaskStatus(taskId, 'completed', button);
+                    // Xóa task khỏi giao diện ngay lập tức với animation mượt mà
+                    taskElement.style.opacity = '0';
+                    taskElement.style.transform = 'translateX(-20px)';
                     
-                    // Chỉ cập nhật stats, không reload tasks
                     setTimeout(() => {
+                        if (taskElement.parentNode) {
+                            taskElement.parentNode.removeChild(taskElement);
+                        }
+                        
+                        // Cập nhật stats ngay lập tức
                         updateStatsOnly();
                         updateLastUpdateTime();
-                    }, 500);
+                        
+                        // Kiểm tra nếu không còn task nào thì hiển thị thông báo trống
+                        const remainingTasks = document.querySelectorAll('.task-item');
+                        if (remainingTasks.length === 0) {
+                            const content = document.getElementById('tasks-content');
+                            showEmptyMessage(content, currentTab);
+                        }
+                    }, 300);
                     
                     // Show notification
                     showNotification('success', data.message);
@@ -1274,14 +1293,28 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Cập nhật UI mà không reload toàn bộ
-                    updateTaskStatus(taskId, 'in_progress', button);
-                    showNotification('success', data.message);
-                    // Chỉ cập nhật stats, không reload tasks
+                    // Xóa task khỏi tab pending và chuyển sang tab in_progress
+                    taskElement.style.opacity = '0';
+                    taskElement.style.transform = 'translateX(-20px)';
+                    
                     setTimeout(() => {
+                        if (taskElement.parentNode) {
+                            taskElement.parentNode.removeChild(taskElement);
+                        }
+                        
+                        // Cập nhật stats ngay lập tức
                         updateStatsOnly();
                         updateLastUpdateTime();
-                    }, 500);
+                        
+                        // Kiểm tra nếu không còn task nào thì hiển thị thông báo trống
+                        const remainingTasks = document.querySelectorAll('.task-item');
+                        if (remainingTasks.length === 0) {
+                            const content = document.getElementById('tasks-content');
+                            showEmptyMessage(content, currentTab);
+                        }
+                    }, 300);
+                    
+                    showNotification('success', data.message);
                 } else {
                     button.disabled = false;
                     button.innerHTML = '🔄 Đang làm';
@@ -1317,14 +1350,28 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Cập nhật UI mà không reload toàn bộ
-                    updateTaskStatus(taskId, 'pending', button);
-                    showNotification('success', data.message);
-                    // Chỉ cập nhật stats, không reload tasks
+                    // Xóa task khỏi tab hiện tại và chuyển sang tab pending
+                    taskElement.style.opacity = '0';
+                    taskElement.style.transform = 'translateX(-20px)';
+                    
                     setTimeout(() => {
+                        if (taskElement.parentNode) {
+                            taskElement.parentNode.removeChild(taskElement);
+                        }
+                        
+                        // Cập nhật stats ngay lập tức
                         updateStatsOnly();
                         updateLastUpdateTime();
-                    }, 500);
+                        
+                        // Kiểm tra nếu không còn task nào thì hiển thị thông báo trống
+                        const remainingTasks = document.querySelectorAll('.task-item');
+                        if (remainingTasks.length === 0) {
+                            const content = document.getElementById('tasks-content');
+                            showEmptyMessage(content, currentTab);
+                        }
+                    }, 300);
+                    
+                    showNotification('success', data.message);
                 } else {
                     button.disabled = false;
                     button.innerHTML = '⏳ Đang chờ';
@@ -1336,7 +1383,6 @@
                 console.error('Lỗi quay lại chờ task:', error);
                 button.disabled = false;
                 button.innerHTML = '⏳ Đang chờ';
-                taskElement.classList.remove('completing');
                 showNotification('error', 'Lỗi kết nối');
             });
         }
@@ -1360,14 +1406,28 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Cập nhật UI mà không reload toàn bộ
-                    updateTaskStatus(taskId, 'cancelled', button);
-                    showNotification('success', data.message);
-                    // Chỉ cập nhật stats, không reload tasks
+                    // Xóa task khỏi tab hiện tại và chuyển sang tab cancelled
+                    taskElement.style.opacity = '0';
+                    taskElement.style.transform = 'translateX(-20px)';
+                    
                     setTimeout(() => {
+                        if (taskElement.parentNode) {
+                            taskElement.parentNode.removeChild(taskElement);
+                        }
+                        
+                        // Cập nhật stats ngay lập tức
                         updateStatsOnly();
                         updateLastUpdateTime();
-                    }, 500);
+                        
+                        // Kiểm tra nếu không còn task nào thì hiển thị thông báo trống
+                        const remainingTasks = document.querySelectorAll('.task-item');
+                        if (remainingTasks.length === 0) {
+                            const content = document.getElementById('tasks-content');
+                            showEmptyMessage(content, currentTab);
+                        }
+                    }, 300);
+                    
+                    showNotification('success', data.message);
                 } else {
                     button.disabled = false;
                     button.innerHTML = '❌ Đã hủy';
