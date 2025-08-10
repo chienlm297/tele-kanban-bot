@@ -18,10 +18,11 @@
 
 ### 🤖 **Telegram Bot Intelligence**
 - **🎯 Auto Task Creation**: Tự động tạo task khi được tag trong nhóm
-- **✅ Smart Completion**: Đánh dấu hoàn thành khi reply "done"
+- **✅ Smart Completion**: Đánh dấu hoàn thành khi reply "done" (silent mode)
 - **🧠 AI Suggestions**: Gợi ý tasks ưu tiên bằng AI (`/ai`)
 - **📊 Productivity Insights**: Phân tích hiệu suất (`/insights`)
 - **🔍 Silent Mode**: Không spam tin nhắn, chỉ lưu vào database
+- **📱 Web Integration**: Bot chỉ reply khi hoàn thành từ web dashboard
 
 ### 🌐 **Web Dashboard Advanced**
 - **📋 Task Management**: Quản lý tasks với giao diện đẹp
@@ -30,6 +31,11 @@
 - **⚡ One-click Actions**: Hoàn thành, pending, cancel, in-progress
 - **📱 Telegram Integration**: Auto reply khi hoàn thành từ web
 - **📊 Smart Stats**: Thống kê real-time với auto-refresh
+
+### **🔇 Silent Mode vs Web Integration**
+- **🔇 Silent Mode**: Khi reply "done", "xong", "hoàn thành" → Bot chỉ đánh dấu hoàn thành, **KHÔNG reply**
+- **📱 Web Integration**: Khi ấn "Hoàn thành" trên web → Bot **SẼ reply** tin nhắn hoàn thành
+- **💡 Lý do**: Tránh spam tin nhắn, chỉ thông báo khi cần thiết
 
 ### 🧠 **AI Analysis Engine**
 - **🎯 Smart Priority Scoring**: Phân tích độ ưu tiên thông minh
@@ -148,9 +154,10 @@ python scripts/start_dashboard.py
 1. **🎯 Tạo task**: Ai đó tag bạn trong nhóm Telegram
 2. **🧠 AI Analysis**: System tự động phân tích priority
 3. **💡 Smart Suggestions**: AI gợi ý tasks nên làm trước
-4. **✅ Complete**: Reply "done" hoặc click nút trên web
-5. **📱 Auto Reply**: Bot tự động reply hoàn thành
-6. **🔄 Real-time Update**: Dashboard tự động cập nhật
+4. **✅ Complete**: 
+   - **Reply "done"**: Chỉ đánh dấu hoàn thành (silent mode)
+   - **Click nút trên web**: Bot sẽ reply tin nhắn hoàn thành
+5. **🔄 Real-time Update**: Dashboard tự động cập nhật
 
 ## 🧠 **AI Features**
 

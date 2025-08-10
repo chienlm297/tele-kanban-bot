@@ -296,8 +296,10 @@ class TelegramKanbanBot:
             if task:
                 success = self.db.complete_task(task['id'], message.text)
                 if success:
-                    await message.reply_text(f"🎉 Hoàn thành công việc #{task['id']}!")
-                    logger.info(f"✅ Hoàn thành task #{task['id']}")
+                    # Chỉ đánh dấu hoàn thành, không reply
+                    logger.info(f"✅ Hoàn thành task #{task['id']} (silent mode)")
+                else:
+                    logger.error(f"❌ Lỗi khi hoàn thành task #{task['id']}")
             else:
                 logger.info(f"❌ Không tìm thấy task để hoàn thành")
     
