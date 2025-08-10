@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Config files with sensitive data
+src/config/settings.py
+config.py
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+tasks.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+railway_usage.log
+cleanup.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Railway specific
+.railway/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Old files (development)
+old_files/
+backup/
