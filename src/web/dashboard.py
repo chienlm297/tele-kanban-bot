@@ -224,10 +224,19 @@ def api_suggestions():
 
 @app.route('/api/insights')
 def api_insights():
-    """API lấy productivity insights"""
+    """API lấy insights từ AI"""
     try:
         insights = ai_analyzer.get_productivity_insights()
         return jsonify(insights)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/stats/assignees')
+def api_assignees_stats():
+    """API lấy thống kê tasks theo người giao việc"""
+    try:
+        assignees = db.get_tasks_by_assignee()
+        return jsonify(assignees)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

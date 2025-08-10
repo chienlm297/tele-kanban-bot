@@ -291,3 +291,40 @@ class TaskDatabase:
             'in_progress': in_progress,
             'today': today
         }
+    
+    def get_tasks_by_assignee(self) -> List[Dict]:
+        """Lấy thống kê số lượng tasks theo người giao việc"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT 
+                tagged_by_full_name,
+                tagged_by_username,
+                COUNT(*) as task_count,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count,
+                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_count
+            FROM tasks 
+            WHERE tagged_by_full_name IS NOT NULL OR tagged_by_username IS NOT NULL
+            GROUP BY COALESCE(tagged_by_full_name, tagged_by_username)
+            ORDER BY task_count DESC
+        ''')
+        
+        assignees = []
+        for row in cursor.fetchall():
+            full_name = row[0] or row[1] or "Không rõ tên"
+            username = row[1] or "Không có username"
+            assignees.append({
+                'name': full_name,
+                'username': username,
+                'total_tasks': row[2],
+                'pending_tasks': row[3],
+                'completed_tasks': row[4],
+                'cancelled_tasks': row[5],
+                'in_progress_tasks': row[6]
+            })
+        
+        conn.close()
+        return assignees

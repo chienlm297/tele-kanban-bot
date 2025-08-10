@@ -111,6 +111,99 @@
             margin-bottom: 5px;
         }
         
+        /* CSS cho section thống kê theo người giao việc */
+        .assignees-stats-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .assignees-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .assignee-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .assignee-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .assignee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .assignee-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .assignee-username {
+            font-size: 0.9em;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .assignee-total {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .assignee-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .assignee-stat-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .assignee-stat-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .assignee-stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-pending { color: #ffc107; }
+        .stat-completed { color: #28a745; }
+        .stat-cancelled { color: #dc3545; }
+        .stat-in-progress { color: #17a2b8; }
+        
         .tabs {
             display: flex;
             background: rgba(255, 255, 255, 0.2);
@@ -402,6 +495,18 @@
             margin: 20px 0;
         }
         
+        /* Empty message styling */
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 1.1em;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
         /* Task item transitions */
         .task-item {
             transition: all 0.3s ease;
@@ -673,6 +778,14 @@
             </div>
         </div>
         
+        <!-- Thống kê theo người giao việc -->
+        <div class="assignees-stats-section">
+            <h2 class="section-title">👥 Thống kê theo người giao việc</h2>
+            <div class="assignees-grid" id="assignees-stats">
+                <div class="loading">Đang tải thống kê...</div>
+            </div>
+        </div>
+        
         <div class="tabs">
             <button class="tab" onclick="showTasks('suggestions')">🤖 AI Gợi ý</button>
             <button class="tab active" onclick="showTasks('pending')">⏳ Đang chờ</button>
@@ -699,6 +812,7 @@
         // Load dữ liệu khi trang được tải
         window.addEventListener('load', function() {
             loadStats();
+            loadAssigneesStats(); // Load assignees stats khi trang được tải
             loadTasks('pending');
             // Khởi tạo auto-refresh
             startAutoRefresh();
@@ -719,6 +833,20 @@
                 })
                 .catch(error => {
                     console.error('Lỗi load thống kê:', error);
+                });
+        }
+        
+        function loadAssigneesStats() {
+            fetch('/api/stats/assignees')
+                .then(response => response.json())
+                .then(assignees => {
+                    const container = document.getElementById('assignees-stats');
+                    updateAssigneesStats(container, assignees);
+                })
+                .catch(error => {
+                    console.error('Lỗi load thống kê theo người giao việc:', error);
+                    const container = document.getElementById('assignees-stats');
+                    container.innerHTML = '<div class="error-message">❌ Lỗi tải thống kê theo người giao việc</div>';
                 });
         }
         
@@ -989,7 +1117,7 @@
         
         // Hàm hiển thị thông báo trống cho suggestions
         function showEmptySuggestionsMessage(container) {
-            container.innerHTML = '<div class="empty">🎉 Tuyệt vời! AI không có gợi ý ưu tiên nào - bạn đã hoàn thành hết việc quan trọng!</div>';
+            container.innerHTML = '<div class="empty-message">🎉 Tuyệt vời! AI không có gợi ý ưu tiên nào - bạn đã hoàn thành hết việc quan trọng!</div>';
         }
         
         // Hàm tạo suggestion element
@@ -1170,6 +1298,9 @@
                 .catch(error => {
                     console.error('Lỗi cập nhật stats:', error);
                 });
+            
+            // Cập nhật thống kê theo người giao việc
+            loadAssigneesStats();
         }
         
         // Hàm cập nhật từng stat card một cách mượt mà
@@ -1659,6 +1790,20 @@
                     console.log('⚠️ Không thể kiểm tra stats updates:', error);
                 });
             
+            // Kiểm tra thống kê theo người giao việc
+            fetch('/api/stats/assignees')
+                .then(response => response.json())
+                .then(assignees => {
+                    // Cập nhật thống kê theo người giao việc nếu có thay đổi
+                    const container = document.getElementById('assignees-stats');
+                    if (container) {
+                        updateAssigneesStats(container, assignees);
+                    }
+                })
+                .catch(error => {
+                    console.log('⚠️ Không thể kiểm tra assignees stats updates:', error);
+                });
+            
             // Kiểm tra task list updates (chỉ khi không phải đang chuyển tab)
             if (currentTab && currentTab !== 'suggestions') {
                 fetch(`/api/tasks?status=${currentTab}`)
@@ -1711,6 +1856,53 @@
             };
         }
         
+        // Hàm cập nhật thống kê theo người giao việc
+        function updateAssigneesStats(container, assignees) {
+            if (assignees.length === 0) {
+                container.innerHTML = '<div class="empty-message">📭 Chưa có dữ liệu thống kê theo người giao việc</div>';
+                return;
+            }
+            
+            // Xóa loading message
+            const loadingElement = container.querySelector('.loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+            
+            // Tạo HTML cho từng assignee
+            const assigneesHTML = assignees.map(assignee => `
+                <div class="assignee-card">
+                    <div class="assignee-header">
+                        <div>
+                            <div class="assignee-name">${assignee.name}</div>
+                            <div class="assignee-username">@${assignee.username}</div>
+                        </div>
+                        <div class="assignee-total">${assignee.total_tasks}</div>
+                    </div>
+                    <div class="assignee-stats">
+                        <div class="assignee-stat-item">
+                            <div class="assignee-stat-label">⏳ Đang chờ</div>
+                            <div class="assignee-stat-value stat-pending">${assignee.pending_tasks}</div>
+                        </div>
+                        <div class="assignee-stat-item">
+                            <div class="assignee-stat-label">🔄 Đang làm</div>
+                            <div class="assignee-stat-value stat-in-progress">${assignee.in_progress_tasks}</div>
+                        </div>
+                        <div class="assignee-stat-item">
+                            <div class="assignee-stat-label">✅ Hoàn thành</div>
+                            <div class="assignee-stat-value stat-completed">${assignee.completed_tasks}</div>
+                        </div>
+                        <div class="assignee-stat-item">
+                            <div class="assignee-stat-label">❌ Đã hủy</div>
+                            <div class="assignee-stat-value stat-cancelled">${assignee.cancelled_tasks}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = assigneesHTML;
+        }
+        
         // Manual refresh với loading indicator
         function manualRefresh() {
             const refreshBtn = document.getElementById('manual-refresh-btn');
@@ -1722,6 +1914,9 @@
             // Sử dụng hàm mới để tránh nháy
             updateStatsOnly();
             updateLastUpdateTime();
+            
+            // Cập nhật thống kê theo người giao việc
+            loadAssigneesStats();
             
             setTimeout(() => {
                 refreshBtn.innerHTML = originalText;
