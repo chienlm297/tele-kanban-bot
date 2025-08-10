@@ -347,6 +347,128 @@
             color: #667eea;
         }
         
+        /* Loading container và spinner */
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-container p {
+            color: #666;
+            font-size: 1.1em;
+            margin: 0;
+        }
+        
+        /* Error message styling */
+        .error-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #dc3545;
+            font-size: 1.1em;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        /* Task item transitions */
+        .task-item {
+            transition: all 0.3s ease;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .task-item.fade-out {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        
+        .task-item.fade-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        /* AI insights header animation */
+        .ai-insights {
+            transition: all 0.3s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Smooth tab switching */
+        .tab {
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Task card hover effects */
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Button hover animations */
+        .btn {
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Empty state styling */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.2em;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 2px dashed #dee2e6;
+        }
+        
+        /* Priority badge animations */
+        .priority-badge {
+            transition: all 0.2s ease;
+        }
+        
+        .priority-badge:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Status badge animations */
+        .task-status {
+            transition: all 0.2s ease;
+        }
+        
+        .task-status:hover {
+            transform: scale(1.05);
+        }
+        
         .priority-badge {
             padding: 4px 12px;
             border-radius: 12px;
@@ -562,113 +684,283 @@
         }
         
         function loadTasks(type) {
+            // Sử dụng DOM manipulation thay vì innerHTML để tránh nháy
             const content = document.getElementById('tasks-content');
-            content.innerHTML = '<div class="loading">Đang tải...</div>';
             
-            let apiUrl = '';
-            if (type === 'suggestions') {
-                loadSuggestions();
-                return;
-            } else if (type === 'pending') {
-                apiUrl = '/api/tasks/pending';
-            } else if (type === 'in_progress') {
-                apiUrl = '/api/tasks/in_progress';
-            } else if (type === 'completed') {
-                apiUrl = '/api/tasks/completed';
-            } else if (type === 'cancelled') {
-                apiUrl = '/api/tasks/cancelled';
-            } else {
-                apiUrl = '/api/tasks?type=all';
-            }
+            // Hiển thị loading indicator
+            showLoadingIndicator(content);
             
-            fetch(apiUrl)
+            fetch(`/api/tasks?status=${type}`)
                 .then(response => response.json())
                 .then(tasks => {
-                    displayTasks(tasks, type);
+                    // Xóa loading và cập nhật tasks một cách mượt mà
+                    hideLoadingIndicator(content);
+                    updateTaskList(content, tasks, type);
                 })
                 .catch(error => {
                     console.error('Lỗi load tasks:', error);
-                    content.innerHTML = '<div class="empty">Lỗi tải dữ liệu</div>';
+                    hideLoadingIndicator(content);
+                    showErrorMessage(content, 'Lỗi tải danh sách công việc');
                 });
+        }
+        
+        // Hàm hiển thị loading indicator
+        function showLoadingIndicator(container) {
+            container.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Đang tải danh sách công việc...</p>
+                </div>
+            `;
+        }
+        
+        // Hàm ẩn loading indicator
+        function hideLoadingIndicator(container) {
+            const loadingElement = container.querySelector('.loading-container');
+            if (loadingElement) {
+                loadingElement.style.opacity = '0';
+                setTimeout(() => {
+                    if (loadingElement.parentNode) {
+                        loadingElement.parentNode.removeChild(loadingElement);
+                    }
+                }, 300);
+            }
+        }
+        
+        // Hàm hiển thị thông báo lỗi
+        function showErrorMessage(container, message) {
+            container.innerHTML = `<div class="error-message">❌ ${message}</div>`;
+        }
+        
+        // Hàm cập nhật task list một cách mượt mà
+        function updateTaskList(container, tasks, type) {
+            if (tasks.length === 0) {
+                showEmptyMessage(container, type);
+                return;
+            }
+            
+            // Xóa tất cả tasks cũ một cách mượt mà
+            const existingTasks = container.querySelectorAll('.task-item');
+            existingTasks.forEach((task, index) => {
+                setTimeout(() => {
+                    task.style.opacity = '0';
+                    task.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        if (task.parentNode) {
+                            task.parentNode.removeChild(task);
+                        }
+                    }, 300);
+                }, index * 50); // Staggered removal
+            });
+            
+            // Thêm tasks mới một cách mượt mà
+            setTimeout(() => {
+                tasks.forEach((task, index) => {
+                    const taskElement = createTaskElement(task, type);
+                    taskElement.style.opacity = '0';
+                    taskElement.style.transform = 'translateX(20px)';
+                    container.appendChild(taskElement);
+                    
+                    // Animate in với delay
+                    setTimeout(() => {
+                        taskElement.style.opacity = '1';
+                        taskElement.style.transform = 'translateX(0)';
+                    }, index * 100 + 400); // Staggered appearance
+                });
+            }, existingTasks.length * 50 + 400);
+        }
+        
+        // Hàm hiển thị thông báo trống
+        function showEmptyMessage(container, type) {
+            let emptyMessage = '';
+            switch(type) {
+                case 'pending':
+                    emptyMessage = '🎉 Tuyệt vời! Không có công việc nào đang chờ.';
+                    break;
+                case 'in_progress':
+                    emptyMessage = '📝 Chưa có công việc nào đang thực hiện.';
+                    break;
+                case 'completed':
+                    emptyMessage = '📝 Chưa có công việc nào hoàn thành.';
+                    break;
+                case 'cancelled':
+                    emptyMessage = '📝 Chưa có công việc nào bị hủy bỏ.';
+                    break;
+                default:
+                    emptyMessage = '📝 Chưa có công việc nào.';
+            }
+            
+            container.innerHTML = `<div class="empty">${emptyMessage}</div>`;
+        }
+        
+        // Hàm tạo task element
+        function createTaskElement(task, type) {
+            const taskElement = document.createElement('div');
+            taskElement.className = 'task-item';
+            taskElement.id = `task-${task.id}`;
+            
+            const statusClass = getStatusClass(task.status);
+            const statusText = getStatusText(task.status);
+            
+            const createdDate = new Date(task.created_at).toLocaleDateString('vi-VN');
+            const completedDate = task.completed_at ? 
+                new Date(task.completed_at).toLocaleDateString('vi-VN') : null;
+            
+            // Tạo Telegram link
+            const telegramLink = `https://t.me/c/${Math.abs(task.chat_id).toString().substring(4)}/${task.message_id}`;
+            
+            taskElement.innerHTML = `
+                <div class="task-header">
+                    <div class="task-id">#${task.id}</div>
+                    <div class="task-status ${statusClass}">${statusText}</div>
+                </div>
+                <div class="task-meta">
+                    <span>📍 <strong>Nhóm:</strong> ${task.chat_title || 'Chat riêng'}</span>
+                    <span>👤 <strong>Người giao:</strong> ${task.tagged_by_full_name || task.tagged_by_username || 'Không rõ'}</span>
+                    <span>📅 <strong>Tạo:</strong> ${createdDate}</span>
+                    ${completedDate ? `<span>✅ <strong>Hoàn thành:</strong> ${completedDate}</span>` : ''}
+                </div>
+                <div class="task-text">
+                    ${task.message_text || '[Media/File]'}
+                </div>
+                ${task.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">💬 Ghi chú: ${task.notes}</div>` : ''}
+                
+                <div class="task-actions">
+                    <a href="${telegramLink}" target="_blank" class="btn btn-telegram">
+                        📱 Mở trong Telegram
+                    </a>
+                    ${getActionButtons(task, type)}
+                </div>
+            `;
+            
+            return taskElement;
         }
         
         function loadSuggestions() {
             const content = document.getElementById('tasks-content');
             
-            // Load insights first
-            fetch('/api/insights')
-                .then(response => response.json())
-                .then(insights => {
-                    // Load suggestions
-                    return fetch('/api/suggestions?limit=10');
-                })
+            // Hiển thị loading indicator
+            showLoadingIndicator(content);
+            
+            fetch('/api/suggestions?limit=10')
                 .then(response => response.json())
                 .then(suggestions => {
-                    displaySuggestions(suggestions);
+                    // Xóa loading và cập nhật suggestions một cách mượt mà
+                    hideLoadingIndicator(content);
+                    updateSuggestionsList(content, suggestions);
                 })
                 .catch(error => {
                     console.error('Lỗi load suggestions:', error);
-                    content.innerHTML = '<div class="empty">Lỗi tải gợi ý AI</div>';
+                    hideLoadingIndicator(content);
+                    showErrorMessage(content, 'Lỗi tải gợi ý AI');
                 });
         }
         
-        function displaySuggestions(suggestions) {
-            const content = document.getElementById('tasks-content');
-            
+        // Hàm cập nhật suggestions list một cách mượt mà
+        function updateSuggestionsList(container, suggestions) {
             if (suggestions.length === 0) {
-                content.innerHTML = '<div class="empty">🎉 Tuyệt vời! AI không có gợi ý ưu tiên nào - bạn đã hoàn thành hết việc quan trọng!</div>';
+                showEmptySuggestionsMessage(container);
                 return;
             }
             
-            let html = `
-                <div class="ai-insights">
+            // Xóa tất cả suggestions cũ một cách mượt mà
+            const existingSuggestions = container.querySelectorAll('.task-item');
+            existingSuggestions.forEach((suggestion, index) => {
+                setTimeout(() => {
+                    suggestion.style.opacity = '0';
+                    suggestion.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        if (suggestion.parentNode) {
+                            suggestion.parentNode.removeChild(suggestion);
+                        }
+                    }, 300);
+                }, index * 50);
+            });
+            
+            // Thêm suggestions mới một cách mượt mà
+            setTimeout(() => {
+                // Thêm header AI
+                const aiHeader = document.createElement('div');
+                aiHeader.className = 'ai-insights';
+                aiHeader.innerHTML = `
                     <h3>🤖 AI Smart Suggestions</h3>
                     <p>Dựa trên phân tích thông minh, đây là các tasks AI khuyên bạn nên ưu tiên:</p>
+                `;
+                aiHeader.style.opacity = '0';
+                aiHeader.style.transform = 'translateY(-20px)';
+                container.appendChild(aiHeader);
+                
+                setTimeout(() => {
+                    aiHeader.style.opacity = '1';
+                    aiHeader.style.transform = 'translateY(0)';
+                }, 100);
+                
+                // Thêm từng suggestion
+                suggestions.forEach((task, index) => {
+                    const suggestionElement = createSuggestionElement(task, index);
+                    suggestionElement.style.opacity = '0';
+                    suggestionElement.style.transform = 'translateX(20px)';
+                    container.appendChild(suggestionElement);
+                    
+                    // Animate in với delay
+                    setTimeout(() => {
+                        suggestionElement.style.opacity = '1';
+                        suggestionElement.style.transform = 'translateX(0)';
+                    }, index * 100 + 300);
+                });
+            }, existingSuggestions.length * 50 + 300);
+        }
+        
+        // Hàm hiển thị thông báo trống cho suggestions
+        function showEmptySuggestionsMessage(container) {
+            container.innerHTML = '<div class="empty">🎉 Tuyệt vời! AI không có gợi ý ưu tiên nào - bạn đã hoàn thành hết việc quan trọng!</div>';
+        }
+        
+        // Hàm tạo suggestion element
+        function createSuggestionElement(task, index) {
+            const suggestionElement = document.createElement('div');
+            suggestionElement.className = 'task-item';
+            suggestionElement.id = `task-${task.id}`;
+            suggestionElement.style.borderLeft = `5px solid ${getPriorityColor(task.priority_score)}`;
+            
+            const priorityClass = getPriorityClass(task.priority_score);
+            const telegramLink = `https://t.me/c/${Math.abs(task.chat_id).toString().substring(4)}/${task.message_id}`;
+            
+            suggestionElement.innerHTML = `
+                <div class="task-header">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 1.2em; margin-right: 10px;">${index + 1}.</span>
+                        <div class="task-id">#${task.id}</div>
+                        <div class="priority-badge ${priorityClass}">${task.priority_level}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: bold; color: #667eea;">
+                            Score: ${Math.round(task.priority_score)}/100
+                        </div>
+                    </div>
+                </div>
+                <div class="task-meta">
+                    <span>📍 <strong>Nhóm:</strong> ${task.chat_title || 'Chat riêng'}</span>
+                    <span>👤 <strong>Người giao:</strong> ${task.tagged_by_full_name || task.tagged_by_username || 'Không rõ'}</span>
+                    <span>📅 <strong>Tạo:</strong> ${new Date(task.created_at).toLocaleDateString('vi-VN')}</span>
+                </div>
+                <div class="task-text">
+                    ${task.message_text || '[Media/File]'}
+                </div>
+                <div class="suggestion-reason">
+                    <strong>🧠 Lý do AI gợi ý:</strong> ${task.suggestion_reason}
+                </div>
+                <div class="task-actions">
+                    <a href="${telegramLink}" target="_blank" class="btn btn-telegram">
+                        📱 Mở trong Telegram
+                    </a>
+                    <button class="btn btn-complete" onclick="completeTask(${task.id})">
+                        ✅ Hoàn thành
+                    </button>
                 </div>
             `;
             
-            suggestions.forEach((task, index) => {
-                const priorityClass = getPriorityClass(task.priority_score);
-                const telegramLink = `https://t.me/c/${Math.abs(task.chat_id).toString().substring(4)}/${task.message_id}`;
-                
-                html += `
-                    <div class="task-item" id="task-${task.id}" style="border-left: 5px solid ${getPriorityColor(task.priority_score)};">
-                        <div class="task-header">
-                            <div style="display: flex; align-items: center;">
-                                <span style="font-size: 1.2em; margin-right: 10px;">${index + 1}.</span>
-                                <div class="task-id">#${task.id}</div>
-                                <div class="priority-badge ${priorityClass}">${task.priority_level}</div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-weight: bold; color: #667eea;">
-                                    Score: ${Math.round(task.priority_score)}/100
-                                </div>
-                            </div>
-                        </div>
-                        <div class="task-meta">
-                            <span>📍 <strong>Nhóm:</strong> ${task.chat_title || 'Chat riêng'}</span>
-                            <span>👤 <strong>Người giao:</strong> ${task.tagged_by_full_name || task.tagged_by_username || 'Không rõ'}</span>
-                            <span>📅 <strong>Tạo:</strong> ${new Date(task.created_at).toLocaleDateString('vi-VN')}</span>
-                        </div>
-                        <div class="task-text">
-                            ${task.message_text || '[Media/File]'}
-                        </div>
-                        <div class="suggestion-reason">
-                            <strong>🧠 Lý do AI gợi ý:</strong> ${task.suggestion_reason}
-                        </div>
-                        <div class="task-actions">
-                            <a href="${telegramLink}" target="_blank" class="btn btn-telegram">
-                                📱 Mở trong Telegram
-                            </a>
-                            <button class="btn btn-complete" onclick="completeTask(${task.id})">
-                                ✅ Hoàn thành
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            content.innerHTML = html;
+            return suggestionElement;
         }
         
         function getPriorityClass(score) {
@@ -683,73 +975,6 @@
             if (score >= 65) return '#ff6b6b';
             if (score >= 50) return '#4ecdc4';
             return '#95a5a6';
-        }
-        
-        function displayTasks(tasks, type) {
-            const content = document.getElementById('tasks-content');
-            
-            if (tasks.length === 0) {
-                let emptyMessage = '';
-                switch(type) {
-                    case 'pending':
-                        emptyMessage = '🎉 Tuyệt vời! Không có công việc nào đang chờ.';
-                        break;
-                    case 'in_progress':
-                        emptyMessage = '📝 Chưa có công việc nào đang thực hiện.';
-                        break;
-                    case 'completed':
-                        emptyMessage = '📝 Chưa có công việc nào hoàn thành.';
-                        break;
-                    case 'cancelled':
-                        emptyMessage = '📝 Chưa có công việc nào bị hủy bỏ.';
-                        break;
-                    default:
-                        emptyMessage = '📝 Chưa có công việc nào.';
-                }
-                content.innerHTML = `<div class="empty">${emptyMessage}</div>`;
-                return;
-            }
-            
-            let html = '';
-            tasks.forEach(task => {
-                const statusClass = getStatusClass(task.status);
-                const statusText = getStatusText(task.status);
-                
-                const createdDate = new Date(task.created_at).toLocaleDateString('vi-VN');
-                const completedDate = task.completed_at ? 
-                    new Date(task.completed_at).toLocaleDateString('vi-VN') : null;
-                
-                // Tạo Telegram link
-                const telegramLink = `https://t.me/c/${Math.abs(task.chat_id).toString().substring(4)}/${task.message_id}`;
-                
-                html += `
-                    <div class="task-item" id="task-${task.id}">
-                        <div class="task-header">
-                            <div class="task-id">#${task.id}</div>
-                            <div class="task-status ${statusClass}">${statusText}</div>
-                        </div>
-                        <div class="task-meta">
-                            <span>📍 <strong>Nhóm:</strong> ${task.chat_title || 'Chat riêng'}</span>
-                            <span>👤 <strong>Người giao:</strong> ${task.tagged_by_full_name || task.tagged_by_username || 'Không rõ'}</span>
-                            <span>📅 <strong>Tạo:</strong> ${createdDate}</span>
-                            ${completedDate ? `<span>✅ <strong>Hoàn thành:</strong> ${completedDate}</span>` : ''}
-                        </div>
-                        <div class="task-text">
-                            ${task.message_text || '[Media/File]'}
-                        </div>
-                        ${task.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">💬 Ghi chú: ${task.notes}</div>` : ''}
-                        
-                        <div class="task-actions">
-                            <a href="${telegramLink}" target="_blank" class="btn btn-telegram">
-                                📱 Mở trong Telegram
-                            </a>
-                            ${getActionButtons(task, type)}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            content.innerHTML = html;
         }
         
         function getStatusClass(status) {
@@ -833,7 +1058,13 @@
             event.target.classList.add('active');
             
             currentTab = type;
-            loadTasks(type);
+            
+            // Sử dụng DOM manipulation thay vì innerHTML
+            if (type === 'suggestions') {
+                loadSuggestions();
+            } else {
+                loadTasks(type);
+            }
         }
         
         function refreshData() {
@@ -1269,20 +1500,55 @@
         
         // Kiểm tra có update mới không
         function checkForUpdates() {
+            // Kiểm tra stats trước
             fetch('/api/stats')
                 .then(response => response.json())
                 .then(data => {
                     // So sánh với stats hiện tại
                     const currentStats = getCurrentStats();
                     if (JSON.stringify(data) !== JSON.stringify(currentStats)) {
-                        console.log('🆕 Phát hiện thay đổi, cập nhật dữ liệu...');
-                        updateStatsOnly(); // Chỉ cập nhật stats, không reload tasks
+                        console.log('🆕 Phát hiện thay đổi stats, cập nhật...');
+                        updateStatsOnly();
                         updateLastUpdateTime();
                     }
                 })
                 .catch(error => {
-                    console.log('⚠️ Không thể kiểm tra updates:', error);
+                    console.log('⚠️ Không thể kiểm tra stats updates:', error);
                 });
+            
+            // Kiểm tra task list updates (chỉ khi không phải đang chuyển tab)
+            if (currentTab && currentTab !== 'suggestions') {
+                fetch(`/api/tasks?status=${currentTab}`)
+                    .then(response => response.json())
+                    .then(tasks => {
+                        const currentTaskIds = getCurrentTaskIds();
+                        const newTaskIds = tasks.map(task => task.id);
+                        
+                        // Kiểm tra xem có task mới hoặc bị xóa không
+                        const hasNewTasks = newTaskIds.some(id => !currentTaskIds.includes(id));
+                        const hasRemovedTasks = currentTaskIds.some(id => !newTaskIds.includes(id));
+                        
+                        if (hasNewTasks || hasRemovedTasks) {
+                            console.log('🆕 Phát hiện thay đổi task list, cập nhật...');
+                            // Cập nhật task list một cách mượt mà
+                            const content = document.getElementById('tasks-content');
+                            updateTaskList(content, tasks, currentTab);
+                            updateLastUpdateTime();
+                        }
+                    })
+                    .catch(error => {
+                        console.log('⚠️ Không thể kiểm tra task updates:', error);
+                    });
+            }
+        }
+        
+        // Hàm lấy danh sách task IDs hiện tại
+        function getCurrentTaskIds() {
+            const taskElements = document.querySelectorAll('.task-item');
+            return Array.from(taskElements).map(el => {
+                const id = el.id.replace('task-', '');
+                return parseInt(id);
+            }).filter(id => !isNaN(id));
         }
         
         // Lấy stats hiện tại
