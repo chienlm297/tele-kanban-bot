@@ -42,7 +42,7 @@ venv.bak/
 
 # Database
 *.db
-tasks.db
+
 *.sqlite
 *.sqlite3
 
