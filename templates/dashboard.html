@@ -34,6 +34,50 @@
             margin-bottom: 10px;
         }
         
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        
+        .header-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .last-update-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            color: white;
+        }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -394,6 +438,17 @@
         <div class="header">
             <h1>🤖 Kanban Bot Dashboard</h1>
             <p>Theo dõi công việc từ Telegram</p>
+            <div class="header-controls">
+                <button id="auto-refresh-btn" class="control-btn" style="background: #28a745;" onclick="toggleAutoRefresh()">
+                    🔄 Auto-refresh: Bật
+                </button>
+                <button id="manual-refresh-btn" class="control-btn" style="background: #007bff;" onclick="manualRefresh()">
+                    🔄 Cập nhật ngay
+                </button>
+                <div class="last-update-info">
+                    📅 Cập nhật cuối: <span id="last-update">--:--:--</span>
+                </div>
+            </div>
         </div>
         
         <div class="stats-grid">
@@ -450,6 +505,10 @@
         window.addEventListener('load', function() {
             loadStats();
             loadTasks('pending');
+            // Khởi tạo auto-refresh
+            startAutoRefresh();
+            startRealTimeUpdates();
+            updateLastUpdateTime();
         });
         
         function loadStats() {
@@ -781,9 +840,10 @@
                     button.innerHTML = '✅ Đã hoàn thành';
                     button.style.background = '#28a745';
                     
-                    // Refresh data after 1 second
+                    // Smart refresh - chỉ refresh stats, không refresh toàn bộ tasks
                     setTimeout(() => {
-                        refreshData();
+                        loadStats();
+                        updateLastUpdateTime();
                     }, 1000);
                     
                     // Show notification
@@ -828,7 +888,9 @@
                     button.style.background = '#007bff'; // A different color for in_progress
                     taskElement.classList.remove('completing');
                     showNotification('success', data.message);
-                    refreshData(); // Refresh data to update stats
+                    // Smart refresh - chỉ refresh stats, không refresh toàn bộ tasks
+                    loadStats();
+                    updateLastUpdateTime();
                 } else {
                     button.disabled = false;
                     button.innerHTML = '🔄 Đang làm';
@@ -868,7 +930,9 @@
                     button.style.background = '#6c757d'; // A different color for pending
                     taskElement.classList.remove('completing');
                     showNotification('success', data.message);
-                    refreshData(); // Refresh data to update stats
+                    // Smart refresh - chỉ refresh stats, không refresh toàn bộ tasks
+                    loadStats();
+                    updateLastUpdateTime();
                 } else {
                     button.disabled = false;
                     button.innerHTML = '⏳ Đang chờ';
@@ -908,7 +972,9 @@
                     button.style.background = '#dc3545'; // A different color for cancelled
                     taskElement.classList.remove('completing');
                     showNotification('success', data.message);
-                    refreshData(); // Refresh data to update stats
+                    // Smart refresh - chỉ refresh stats, không refresh toàn bộ tasks
+                    loadStats();
+                    updateLastUpdateTime();
                 } else {
                     button.disabled = false;
                     button.innerHTML = '❌ Đã hủy';
@@ -958,6 +1024,141 @@
                 }, 300);
             }, 3000);
         }
+
+        // ===== AUTO-REFRESH & REAL-TIME UPDATES =====
+        
+        let autoRefreshInterval;
+        let lastUpdateTime = Date.now();
+        let isAutoRefreshEnabled = true;
+        
+        // Bật/tắt auto-refresh
+        function toggleAutoRefresh() {
+            isAutoRefreshEnabled = !isAutoRefreshEnabled;
+            const button = document.getElementById('auto-refresh-btn');
+            
+            if (isAutoRefreshEnabled) {
+                button.innerHTML = '🔄 Auto-refresh: Bật';
+                button.style.background = '#28a745';
+                startAutoRefresh();
+                showNotification('success', 'Auto-refresh đã bật');
+            } else {
+                button.innerHTML = '⏸️ Auto-refresh: Tắt';
+                button.style.background = '#6c757d';
+                stopAutoRefresh();
+                showNotification('info', 'Auto-refresh đã tắt');
+            }
+        }
+        
+        // Bắt đầu auto-refresh
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            // Auto-refresh mỗi 30 giây
+            autoRefreshInterval = setInterval(() => {
+                if (isAutoRefreshEnabled) {
+                    console.log('🔄 Auto-refreshing data...');
+                    refreshData();
+                    updateLastUpdateTime();
+                }
+            }, 30000); // 30 giây
+        }
+        
+        // Dừng auto-refresh
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+        
+        // Cập nhật thời gian cập nhật cuối
+        function updateLastUpdateTime() {
+            lastUpdateTime = Date.now();
+            const lastUpdateElement = document.getElementById('last-update');
+            if (lastUpdateElement) {
+                lastUpdateElement.textContent = new Date(lastUpdateTime).toLocaleTimeString('vi-VN');
+            }
+        }
+        
+        // Smart refresh - chỉ refresh khi cần thiết
+        function smartRefresh() {
+            // Kiểm tra xem có cần refresh không
+            const timeSinceLastUpdate = Date.now() - lastUpdateTime;
+            const needsRefresh = timeSinceLastUpdate > 60000; // 1 phút
+            
+            if (needsRefresh) {
+                console.log('🔄 Smart refresh triggered');
+                refreshData();
+                updateLastUpdateTime();
+            }
+        }
+        
+        // WebSocket-like polling cho real-time updates
+        function startRealTimeUpdates() {
+            // Polling mỗi 10 giây để kiểm tra thay đổi
+            setInterval(() => {
+                if (isAutoRefreshEnabled) {
+                    checkForUpdates();
+                }
+            }, 10000); // 10 giây
+        }
+        
+        // Kiểm tra có update mới không
+        function checkForUpdates() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // So sánh với stats hiện tại
+                    const currentStats = getCurrentStats();
+                    if (JSON.stringify(data) !== JSON.stringify(currentStats)) {
+                        console.log('🆕 Phát hiện thay đổi, cập nhật dữ liệu...');
+                        refreshData();
+                        updateLastUpdateTime();
+                    }
+                })
+                .catch(error => {
+                    console.log('⚠️ Không thể kiểm tra updates:', error);
+                });
+        }
+        
+        // Lấy stats hiện tại
+        function getCurrentStats() {
+            const statsElements = document.querySelectorAll('.stat-card .number');
+            return {
+                total: parseInt(statsElements[0]?.textContent) || 0,
+                pending: parseInt(statsElements[1]?.textContent) || 0,
+                completed: parseInt(statsElements[2]?.textContent) || 0,
+                in_progress: parseInt(statsElements[3]?.textContent) || 0,
+                cancelled: parseInt(statsElements[4]?.textContent) || 0
+            };
+        }
+        
+        // Manual refresh với loading indicator
+        function manualRefresh() {
+            const refreshBtn = document.getElementById('manual-refresh-btn');
+            const originalText = refreshBtn.innerHTML;
+            
+            refreshBtn.innerHTML = '⏳ Đang cập nhật...';
+            refreshBtn.disabled = true;
+            
+            refreshData();
+            updateLastUpdateTime();
+            
+            setTimeout(() => {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+                showNotification('success', 'Đã cập nhật dữ liệu');
+            }, 1000);
+        }
+        
+        // Khởi tạo auto-refresh khi page load
+        document.addEventListener('DOMContentLoaded', function() {
+            startAutoRefresh();
+            startRealTimeUpdates();
+            updateLastUpdateTime();
+        });
     </script>
 </body>
 </html>
