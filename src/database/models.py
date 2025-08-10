@@ -69,8 +69,59 @@ class TaskDatabase:
         
         return success
     
+    def set_task_pending(self, task_id: int, notes: str = None) -> bool:
+        """Đặt task về trạng thái pending"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE tasks 
+            SET status = 'pending', completed_at = NULL, notes = ?
+            WHERE id = ?
+        ''', (notes, task_id))
+        
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        
+        return success
+    
+    def cancel_task(self, task_id: int, notes: str = None) -> bool:
+        """Hủy bỏ task"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE tasks 
+            SET status = 'cancelled', completed_at = NULL, notes = ?
+            WHERE id = ?
+        ''', (notes, task_id))
+        
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        
+        return success
+    
+    def set_task_in_progress(self, task_id: int, notes: str = None) -> bool:
+        """Đặt task thành trạng thái in_progress"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE tasks 
+            SET status = 'in_progress', notes = ?
+            WHERE id = ?
+        ''', (notes, task_id))
+        
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        
+        return success
+    
     def get_pending_tasks(self) -> List[Dict]:
-        """Lấy danh sách tasks chưa hoàn thành"""
+        """Lấy danh sách tasks chưa hoàn thành (pending)"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -80,6 +131,38 @@ class TaskDatabase:
                    created_at, status
             FROM tasks 
             WHERE status = 'pending'
+            ORDER BY created_at DESC
+        ''')
+        
+        tasks = []
+        for row in cursor.fetchall():
+            tasks.append({
+                'id': row[0],
+                'chat_id': row[1],
+                'chat_title': row[2],
+                'message_id': row[3],
+                'message_text': row[4],
+                'tagged_by_user_id': row[5],
+                'tagged_by_username': row[6],
+                'tagged_by_full_name': row[7],
+                'created_at': row[8],
+                'status': row[9]
+            })
+        
+        conn.close()
+        return tasks
+    
+    def get_active_tasks(self) -> List[Dict]:
+        """Lấy danh sách tasks đang hoạt động (pending + in_progress)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, chat_id, chat_title, message_id, message_text,
+                   tagged_by_user_id, tagged_by_username, tagged_by_full_name,
+                   created_at, status
+            FROM tasks 
+            WHERE status IN ('pending', 'in_progress')
             ORDER BY created_at DESC
         ''')
         
@@ -183,6 +266,14 @@ class TaskDatabase:
         cursor.execute('SELECT COUNT(*) FROM tasks WHERE status = "completed"')
         completed = cursor.fetchone()[0]
         
+        # Tasks cancelled
+        cursor.execute('SELECT COUNT(*) FROM tasks WHERE status = "cancelled"')
+        cancelled = cursor.fetchone()[0]
+        
+        # Tasks in progress
+        cursor.execute('SELECT COUNT(*) FROM tasks WHERE status = "in_progress"')
+        in_progress = cursor.fetchone()[0]
+        
         # Tasks hôm nay
         cursor.execute('''
             SELECT COUNT(*) FROM tasks 
@@ -196,5 +287,7 @@ class TaskDatabase:
             'total': total,
             'pending': pending,
             'completed': completed,
+            'cancelled': cancelled,
+            'in_progress': in_progress,
             'today': today
         }

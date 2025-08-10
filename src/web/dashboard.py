@@ -4,11 +4,8 @@ from src.ai.analyzer import TaskAIAnalyzer
 import requests
 import os
 
-# Use production config if in cloud environment
-if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RENDER') or os.getenv('DYNO'):
-    from src.config import production as settings
-else:
-    from src.config.settings import *
+# Import settings from config package
+from src.config import settings
 
 app = Flask(__name__, template_folder='../../templates')
 db = TaskDatabase(settings.DB_PATH)
@@ -58,12 +55,12 @@ def complete_task_api(task_id):
         all_tasks = db.get_all_tasks(1000)
         task = None
         for t in all_tasks:
-            if t['id'] == task_id and t['status'] == 'pending':
+            if t['id'] == task_id and t['status'] in ['pending', 'in_progress']:
                 task = t
                 break
         
         if not task:
-            return jsonify({'success': False, 'error': 'Task không tìm thấy hoặc đã hoàn thành'}), 404
+            return jsonify({'success': False, 'error': 'Task không tìm thấy hoặc không thể hoàn thành'}), 404
         
         # Đánh dấu hoàn thành trong database
         success = db.complete_task(task_id, 'Hoàn thành từ web dashboard')
@@ -78,6 +75,98 @@ def complete_task_api(task_id):
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/tasks/<int:task_id>/pending', methods=['POST'])
+def set_task_pending_api(task_id):
+    """API để đặt task về trạng thái pending từ web"""
+    try:
+        # Lấy thông tin task
+        all_tasks = db.get_all_tasks(1000)
+        task = None
+        for t in all_tasks:
+            if t['id'] == task_id and t['status'] in ['completed', 'cancelled', 'in_progress']:
+                task = t
+                break
+        
+        if not task:
+            return jsonify({'success': False, 'error': 'Task không tìm thấy hoặc đã ở trạng thái pending'}), 404
+        
+        # Đặt về trạng thái pending trong database
+        success = db.set_task_pending(task_id, 'Đặt lại về pending từ web dashboard')
+        
+        if success:
+            return jsonify({'success': True, 'message': f'Đã đặt task #{task_id} về trạng thái pending'})
+        else:
+            return jsonify({'success': False, 'error': 'Không thể đặt task về pending'}), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/tasks/<int:task_id>/cancel', methods=['POST'])
+def cancel_task_api(task_id):
+    """API để hủy bỏ task từ web"""
+    try:
+        # Lấy thông tin task
+        all_tasks = db.get_all_tasks(1000)
+        task = None
+        for t in all_tasks:
+            if t['id'] == task_id and t['status'] in ['pending', 'in_progress']:
+                task = t
+                break
+        
+        if not task:
+            return jsonify({'success': False, 'error': 'Task không tìm thấy hoặc không thể hủy bỏ'}), 404
+        
+        # Hủy bỏ task trong database
+        success = db.cancel_task(task_id, 'Hủy bỏ từ web dashboard')
+        
+        if success:
+            return jsonify({'success': True, 'message': f'Đã hủy bỏ task #{task_id}'})
+        else:
+            return jsonify({'success': False, 'error': 'Không thể hủy bỏ task'}), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/tasks/<int:task_id>/in_progress', methods=['POST'])
+def set_task_in_progress_api(task_id):
+    """API để đặt task thành trạng thái in_progress từ web"""
+    try:
+        # Lấy thông tin task
+        all_tasks = db.get_all_tasks(1000)
+        task = None
+        for t in all_tasks:
+            if t['id'] == task_id and t['status'] in ['pending', 'completed']:
+                task = t
+                break
+        
+        if not task:
+            return jsonify({'success': False, 'error': 'Task không tìm thấy hoặc không thể đặt thành in_progress'}), 404
+        
+        # Đặt task thành in_progress trong database
+        success = db.set_task_in_progress(task_id, 'Đặt thành in_progress từ web dashboard')
+        
+        if success:
+            return jsonify({'success': True, 'message': f'Đã đặt task #{task_id} thành trạng thái đang làm'})
+        else:
+            return jsonify({'success': False, 'error': 'Không thể đặt task thành in_progress'}), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/tasks/cancelled')
+def api_cancelled_tasks():
+    """API lấy tasks đã bị hủy bỏ"""
+    all_tasks = db.get_all_tasks(100)
+    cancelled_tasks = [task for task in all_tasks if task['status'] == 'cancelled']
+    return jsonify(cancelled_tasks)
+
+@app.route('/api/tasks/in_progress')
+def api_in_progress_tasks():
+    """API lấy tasks đang trong quá trình thực hiện"""
+    all_tasks = db.get_all_tasks(100)
+    in_progress_tasks = [task for task in all_tasks if task['status'] == 'in_progress']
+    return jsonify(in_progress_tasks)
 
 def send_telegram_reply(task):
     """Gửi reply message trong Telegram khi hoàn thành từ web"""

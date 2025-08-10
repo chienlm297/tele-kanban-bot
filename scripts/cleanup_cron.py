@@ -15,11 +15,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def cleanup_database():
     """Cleanup database để tiết kiệm storage"""
     try:
-        # Import based on environment
-        if os.getenv('RAILWAY_ENVIRONMENT'):
-            from src.config import production as settings
-        else:
-            from src.config.settings import *
+        # Import settings from config package
+        from src.config import settings
             
         from src.database.optimized import OptimizedDatabase
         

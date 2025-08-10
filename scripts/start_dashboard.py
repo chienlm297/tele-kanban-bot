@@ -24,7 +24,7 @@ def main():
         sys.exit(1)
     
     try:
-        from src.config.settings import *
+        from src.config import settings
         from src.web.dashboard import app
         
         print(f"✅ Dashboard đang chạy tại: http://localhost:{settings.WEB_PORT}")

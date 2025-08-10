@@ -145,6 +145,16 @@
             color: #155724;
         }
         
+        .status-in-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
         .task-meta {
             display: flex;
             gap: 20px;
@@ -191,6 +201,54 @@
         }
         
         .btn-complete:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-in-progress {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-in-progress:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-in-progress:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-pending {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-pending:hover {
+            background: #545b62;
+            transform: translateY(-1px);
+        }
+        
+        .btn-pending:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+        
+        .btn-cancel:disabled {
             background: #6c757d;
             cursor: not-allowed;
             transform: none;
@@ -340,7 +398,7 @@
         
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>📊 Tổng số việc</h3>
+                <h3>📊 Tổng cộng</h3>
                 <div class="number" id="total-tasks">-</div>
             </div>
             <div class="stat-card">
@@ -348,8 +406,16 @@
                 <div class="number" id="pending-tasks">-</div>
             </div>
             <div class="stat-card">
+                <h3>🔄 Đang làm</h3>
+                <div class="number" id="in-progress-tasks">-</div>
+            </div>
+            <div class="stat-card">
                 <h3>✅ Hoàn thành</h3>
                 <div class="number" id="completed-tasks">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>❌ Đã hủy</h3>
+                <div class="number" id="cancelled-tasks">-</div>
             </div>
             <div class="stat-card">
                 <h3>📅 Hôm nay</h3>
@@ -360,7 +426,9 @@
         <div class="tabs">
             <button class="tab" onclick="showTasks('suggestions')">🤖 AI Gợi ý</button>
             <button class="tab active" onclick="showTasks('pending')">⏳ Đang chờ</button>
+            <button class="tab" onclick="showTasks('in_progress')">🔄 Đang làm</button>
             <button class="tab" onclick="showTasks('completed')">✅ Đã hoàn thành</button>
+            <button class="tab" onclick="showTasks('cancelled')">❌ Đã hủy</button>
             <button class="tab" onclick="showTasks('all')">📋 Tất cả</button>
         </div>
         
@@ -390,7 +458,9 @@
                 .then(data => {
                     document.getElementById('total-tasks').textContent = data.total;
                     document.getElementById('pending-tasks').textContent = data.pending;
+                    document.getElementById('in-progress-tasks').textContent = data.in_progress;
                     document.getElementById('completed-tasks').textContent = data.completed;
+                    document.getElementById('cancelled-tasks').textContent = data.cancelled;
                     document.getElementById('today-tasks').textContent = data.today;
                 })
                 .catch(error => {
@@ -408,8 +478,12 @@
                 return;
             } else if (type === 'pending') {
                 apiUrl = '/api/tasks/pending';
+            } else if (type === 'in_progress') {
+                apiUrl = '/api/tasks/in_progress';
             } else if (type === 'completed') {
                 apiUrl = '/api/tasks/completed';
+            } else if (type === 'cancelled') {
+                apiUrl = '/api/tasks/cancelled';
             } else {
                 apiUrl = '/api/tasks?type=all';
             }
@@ -522,17 +596,31 @@
             const content = document.getElementById('tasks-content');
             
             if (tasks.length === 0) {
-                const emptyMessage = type === 'pending' ? 
-                    '🎉 Tuyệt vời! Không có công việc nào đang chờ.' :
-                    '📝 Chưa có công việc nào.';
+                let emptyMessage = '';
+                switch(type) {
+                    case 'pending':
+                        emptyMessage = '🎉 Tuyệt vời! Không có công việc nào đang chờ.';
+                        break;
+                    case 'in_progress':
+                        emptyMessage = '📝 Chưa có công việc nào đang thực hiện.';
+                        break;
+                    case 'completed':
+                        emptyMessage = '📝 Chưa có công việc nào hoàn thành.';
+                        break;
+                    case 'cancelled':
+                        emptyMessage = '📝 Chưa có công việc nào bị hủy bỏ.';
+                        break;
+                    default:
+                        emptyMessage = '📝 Chưa có công việc nào.';
+                }
                 content.innerHTML = `<div class="empty">${emptyMessage}</div>`;
                 return;
             }
             
             let html = '';
             tasks.forEach(task => {
-                const statusClass = task.status === 'completed' ? 'status-completed' : 'status-pending';
-                const statusText = task.status === 'completed' ? '✅ Hoàn thành' : '⏳ Đang chờ';
+                const statusClass = getStatusClass(task.status);
+                const statusText = getStatusText(task.status);
                 
                 const createdDate = new Date(task.created_at).toLocaleDateString('vi-VN');
                 const completedDate = task.completed_at ? 
@@ -562,17 +650,86 @@
                             <a href="${telegramLink}" target="_blank" class="btn btn-telegram">
                                 📱 Mở trong Telegram
                             </a>
-                            ${task.status === 'pending' ? `
-                                <button class="btn btn-complete" onclick="completeTask(${task.id})">
-                                    ✅ Hoàn thành
-                                </button>
-                            ` : ''}
+                            ${getActionButtons(task, type)}
                         </div>
                     </div>
                 `;
             });
             
             content.innerHTML = html;
+        }
+        
+        function getStatusClass(status) {
+            switch(status) {
+                case 'completed': return 'status-completed';
+                case 'in_progress': return 'status-in-progress';
+                case 'cancelled': return 'status-cancelled';
+                default: return 'status-pending';
+            }
+        }
+        
+        function getStatusText(status) {
+            switch(status) {
+                case 'completed': return '✅ Hoàn thành';
+                case 'in_progress': return '🔄 Đang làm';
+                case 'cancelled': return '❌ Đã hủy';
+                default: return '⏳ Đang chờ';
+            }
+        }
+        
+        function getActionButtons(task, type) {
+            let buttons = '';
+            
+            switch(task.status) {
+                case 'pending':
+                    buttons += `
+                        <button class="btn btn-in-progress" onclick="setTaskInProgress(${task.id})">
+                            🔄 Bắt đầu làm
+                        </button>
+                        <button class="btn btn-complete" onclick="completeTask(${task.id})">
+                            ✅ Hoàn thành
+                        </button>
+                        <button class="btn btn-cancel" onclick="cancelTask(${task.id})">
+                            ❌ Hủy bỏ
+                        </button>
+                    `;
+                    break;
+                case 'in_progress':
+                    buttons += `
+                        <button class="btn btn-pending" onclick="setTaskPending(${task.id})">
+                            ⏳ Quay lại chờ
+                        </button>
+                        <button class="btn btn-complete" onclick="completeTask(${task.id})">
+                            ✅ Hoàn thành
+                        </button>
+                        <button class="btn btn-cancel" onclick="cancelTask(${task.id})">
+                            ❌ Hủy bỏ
+                        </button>
+                    `;
+                    break;
+                case 'completed':
+                    buttons += `
+                        <button class="btn btn-pending" onclick="setTaskPending(${task.id})">
+                            ⏳ Quay lại chờ
+                        </button>
+                        <button class="btn btn-cancel" onclick="cancelTask(${task.id})">
+                            ❌ Hủy bỏ
+                        </button>
+                    `;
+                    break;
+                case 'cancelled':
+                    buttons += `
+                        <button class="btn btn-pending" onclick="setTaskPending(${task.id})">
+                            ⏳ Quay lại chờ
+                        </button>
+                        <button class="btn btn-in-progress" onclick="setTaskInProgress(${task.id})">
+                            🔄 Bắt đầu làm
+                        </button>
+                    `;
+                    break;
+            }
+            
+            return buttons;
         }
         
         function showTasks(type) {
@@ -643,6 +800,126 @@
                 console.error('Lỗi hoàn thành task:', error);
                 button.disabled = false;
                 button.innerHTML = '✅ Hoàn thành';
+                taskElement.classList.remove('completing');
+                showNotification('error', 'Lỗi kết nối');
+            });
+        }
+
+        // Function để bắt đầu làm task
+        function setTaskInProgress(taskId) {
+            const taskElement = document.getElementById(`task-${taskId}`);
+            const button = taskElement.querySelector('.btn-in-progress');
+            
+            // Disable button và show loading
+            button.disabled = true;
+            button.innerHTML = '⏳ Đang xử lý...';
+            taskElement.classList.add('completing');
+
+            fetch(`/api/tasks/${taskId}/in_progress`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.innerHTML = '🔄 Đang làm';
+                    button.style.background = '#007bff'; // A different color for in_progress
+                    taskElement.classList.remove('completing');
+                    showNotification('success', data.message);
+                    refreshData(); // Refresh data to update stats
+                } else {
+                    button.disabled = false;
+                    button.innerHTML = '🔄 Đang làm';
+                    taskElement.classList.remove('completing');
+                    showNotification('error', data.error || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi bắt đầu làm task:', error);
+                button.disabled = false;
+                button.innerHTML = '🔄 Đang làm';
+                taskElement.classList.remove('completing');
+                showNotification('error', 'Lỗi kết nối');
+            });
+        }
+
+        // Function để quay lại chờ task
+        function setTaskPending(taskId) {
+            const taskElement = document.getElementById(`task-${taskId}`);
+            const button = taskElement.querySelector('.btn-pending');
+            
+            // Disable button và show loading
+            button.disabled = true;
+            button.innerHTML = '⏳ Đang xử lý...';
+            taskElement.classList.add('completing');
+
+            fetch(`/api/tasks/${taskId}/pending`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.innerHTML = '⏳ Đang chờ';
+                    button.style.background = '#6c757d'; // A different color for pending
+                    taskElement.classList.remove('completing');
+                    showNotification('success', data.message);
+                    refreshData(); // Refresh data to update stats
+                } else {
+                    button.disabled = false;
+                    button.innerHTML = '⏳ Đang chờ';
+                    taskElement.classList.remove('completing');
+                    showNotification('error', data.error || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi quay lại chờ task:', error);
+                button.disabled = false;
+                button.innerHTML = '⏳ Đang chờ';
+                taskElement.classList.remove('completing');
+                showNotification('error', 'Lỗi kết nối');
+            });
+        }
+
+        // Function để hủy bỏ task
+        function cancelTask(taskId) {
+            const taskElement = document.getElementById(`task-${taskId}`);
+            const button = taskElement.querySelector('.btn-cancel');
+            
+            // Disable button và show loading
+            button.disabled = true;
+            button.innerHTML = '⏳ Đang xử lý...';
+            taskElement.classList.add('completing');
+
+            fetch(`/api/tasks/${taskId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.innerHTML = '❌ Đã hủy';
+                    button.style.background = '#dc3545'; // A different color for cancelled
+                    taskElement.classList.remove('completing');
+                    showNotification('success', data.message);
+                    refreshData(); // Refresh data to update stats
+                } else {
+                    button.disabled = false;
+                    button.innerHTML = '❌ Đã hủy';
+                    taskElement.classList.remove('completing');
+                    showNotification('error', data.error || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi hủy bỏ task:', error);
+                button.disabled = false;
+                button.innerHTML = '❌ Đã hủy';
                 taskElement.classList.remove('completing');
                 showNotification('error', 'Lỗi kết nối');
             });

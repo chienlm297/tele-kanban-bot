@@ -6,11 +6,8 @@ from src.database.models import TaskDatabase
 from src.ai.analyzer import TaskAIAnalyzer
 import os
 
-# Use production config if in cloud environment
-if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RENDER') or os.getenv('DYNO'):
-    from src.config import production as settings
-else:
-    from src.config.settings import *
+# Import settings from config package
+from src.config import settings
 
 # Thiết lập logging
 logging.basicConfig(
@@ -32,18 +29,18 @@ class TelegramKanbanBot:
             return
             
         await update.message.reply_text(
-            "🤖 *Kanban Bot đã sẵn sàng!*\n\n"
-            "Bot sẽ tự động:\n"
-            "• Tạo task khi bạn được tag trong nhóm\n"
-            "• Đánh dấu hoàn thành khi bạn reply 'done'\n\n"
-            "Lệnh có sẵn:\n"
-            "/tasks - Xem danh sách công việc\n"
-            "/ai - Gợi ý AI tasks ưu tiên\n"
-            "/stats - Xem thống kê\n"
-            "/insights - Phân tích productivity\n"
-            "/help - Hướng dẫn sử dụng",
-            parse_mode='Markdown'
-        )
+                    "🤖 *Kanban Bot đã sẵn sàng!*\n\n"
+                    "Bot sẽ tự động:\n"
+                    "• Tạo task khi bạn được tag trong nhóm (lặng lẽ lưu vào danh sách)\n"
+                    "• Đánh dấu hoàn thành khi bạn reply 'done'\n\n"
+                    "Lệnh có sẵn:\n"
+                    "/tasks - Xem danh sách công việc\n"
+                    "/ai - Gợi ý AI tasks ưu tiên\n"
+                    "/stats - Xem thống kê\n"
+                    "/insights - Phân tích productivity\n"
+                    "/help - Hướng dẫn sử dụng",
+                    parse_mode='Markdown'
+                )
     
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handler cho lệnh /help"""
@@ -54,7 +51,7 @@ class TelegramKanbanBot:
 🤖 *Hướng dẫn sử dụng Kanban Bot*
 
 *Cách hoạt động:*
-1. Khi ai đó tag bạn trong nhóm → Bot tự động tạo task
+1. Khi ai đó tag bạn trong nhóm → Bot tự động tạo task (lặng lẽ lưu vào danh sách)
 2. Bạn reply "done" vào message đó → Task được đánh dấu hoàn thành
 
 *Lệnh có sẵn:*
@@ -281,9 +278,7 @@ class TelegramKanbanBot:
             )
             
             logger.info(f"✅ Tạo task mới #{task_id} từ {user.full_name} trong {chat.title}")
-            
-            # Reply để xác nhận
-            await message.reply_text(f"✅ Đã ghi nhận công việc #{task_id}")
+            # Không gửi tin nhắn hay reaction, chỉ lưu vào danh sách
         
         # Kiểm tra xem có phải reply "done" không
         elif (user.id == self.my_user_id and 
