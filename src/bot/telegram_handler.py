@@ -355,14 +355,37 @@ class TelegramKanbanBot:
         if not text:
             return False
         
-        done_words = [
-            'done', 'Done', 'DONE',
-            'xong', 'Xong', 'XONG', 
-            'hoàn thành', 'Hoàn thành', 'HOÀN THÀNH',
-            'ok', 'OK', 'Ok'
+        # Chuyển về chữ thường để so sánh
+        text_lower = text.strip().lower()
+        
+        # Danh sách các từ khóa cơ bản
+        basic_done_words = [
+            'done', 'xong', 'hoàn thành', 'ok', 'oke', 'okay',
+            'xong rồi', 'done rồi', 'hoàn thành rồi', 'ok rồi'
         ]
         
-        return text.strip() in done_words
+        # Kiểm tra từ khóa cơ bản
+        for word in basic_done_words:
+            if word in text_lower:
+                return True
+        
+        # Kiểm tra các biến thể có từ ngữ lịch sự
+        polite_variations = [
+            'done ạ', 'xong ạ', 'hoàn thành ạ', 'ok ạ',
+            'done nhé', 'xong nhé', 'hoàn thành nhé', 'ok nhé',
+            'done nhé chị', 'xong nhé chị', 'hoàn thành nhé chị',
+            'done nhé em', 'xong nhé em', 'hoàn thành nhé em',
+            'done check', 'xong check', 'hoàn thành check',
+            'done check nhé', 'xong check nhé', 'hoàn thành check nhé',
+            'done check nhé em', 'xong check nhé em', 'hoàn thành check nhé em',
+            'done check nhé chị', 'xong check nhé chị', 'hoàn thành check nhé chị'
+        ]
+        
+        for variation in polite_variations:
+            if variation in text_lower:
+                return True
+        
+        return False
     
     def run(self):
         """Chạy bot"""
