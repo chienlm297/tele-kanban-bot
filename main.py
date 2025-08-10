@@ -25,7 +25,7 @@ def run_bot():
         if hasattr(settings, 'PROXY_ENABLED') and settings.PROXY_ENABLED:
             print(f"🌐 Sử dụng proxy: {settings.PROXY_URL}")
         else:
-            print("🌐 Không sử dụng proxy")
+            print("🌐 Không sử dụng proxy (môi trường nhà)")
         
         bot = TelegramKanbanBot()
         bot.run()
@@ -44,7 +44,7 @@ def run_dashboard():
         host = '0.0.0.0'
         
         print(f"✅ Dashboard: http://{host}:{port}")
-        print(f"🌐 Environment: {'Production' if os.getenv('RAILWAY_ENVIRONMENT') else 'Development'}")
+        print(f"🌐 Environment: Development")
         
         app.run(host=host, port=port, debug=False, threaded=True)
     except Exception as e:
@@ -66,10 +66,8 @@ def check_dependencies():
 
 def check_config():
     """Kiểm tra config"""
-    # Production mode: use environment variables
-    if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RENDER') or os.getenv('DYNO'):
-        print("🌐 Detected cloud environment - using production config")
-        return True
+    # Development mode only
+    return True
     
     # Development mode: use settings file
     if not os.path.exists('src/config/settings.py'):

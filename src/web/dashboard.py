@@ -27,7 +27,7 @@ def api_stats():
 
 @app.route('/health')
 def health_check():
-    """Health check endpoint cho Railway"""
+    """Health check endpoint"""
     return jsonify({'status': 'healthy', 'timestamp': '2024-01-01'})
 
 @app.route('/api/tasks')
@@ -305,7 +305,7 @@ if __name__ == '__main__':
     
     print(f"🌐 Khởi động dashboard trên {host}:{port}")
     print(f"🔧 Debug mode: {debug_mode}")
-    print(f"🌍 Environment: {'Production' if os.getenv('RAILWAY_ENVIRONMENT') else 'Development'}")
+    print(f"🌍 Environment: Development")
     
     app.run(
         host=host, 

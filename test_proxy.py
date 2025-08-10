@@ -19,7 +19,9 @@ def test_proxy_connection():
         print("🔍 Kiểm tra cấu hình proxy...")
         
         if not hasattr(settings, 'PROXY_ENABLED') or not settings.PROXY_ENABLED:
-            print("❌ Proxy chưa được bật trong settings.py")
+            print("ℹ️  Proxy chưa được bật trong settings.py")
+            print("💡 Ở nhà: Không cần proxy, để PROXY_ENABLED = False")
+            print("💡 Ở công ty: Đổi PROXY_ENABLED = True và điền thông tin proxy")
             return False
         
         print(f"✅ Proxy được bật: {settings.PROXY_URL}")
@@ -108,6 +110,7 @@ if __name__ == "__main__":
             print("\n⚠️  Proxy hoạt động nhưng bot token có vấn đề.")
             print("🔧 Kiểm tra lại BOT_TOKEN trong settings.py")
     else:
-        print("\n❌ Proxy không hoạt động.")
-        print("🔧 Kiểm tra lại cấu hình proxy trong settings.py")
-        print("🌐 Đảm bảo proxy server 192.168.10.12:9999 đang hoạt động")
+        print("\nℹ️  Proxy không được bật hoặc không hoạt động.")
+        print("💡 Ở nhà: Không cần proxy, để PROXY_ENABLED = False")
+        print("💡 Ở công ty: Đổi PROXY_ENABLED = True và kiểm tra lại cấu hình proxy")
+        print("🌐 Đảm bảo proxy server đang hoạt động nếu sử dụng")

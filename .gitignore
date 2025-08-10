@@ -49,7 +49,6 @@ tasks.db
 # Logs
 *.log
 logs/
-railway_usage.log
 cleanup.log
 
 # OS generated files
@@ -61,8 +60,7 @@ cleanup.log
 ehthumbs.db
 Thumbs.db
 
-# Railway specific
-.railway/
+
 
 # Temporary files
 tmp/

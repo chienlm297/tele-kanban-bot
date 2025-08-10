@@ -15,16 +15,26 @@ WEB_PORT = 5000
 # Database path
 DB_PATH = "tasks.db"
 
-# Cấu hình Proxy Server (bắt buộc ở môi trường công ty)
-PROXY_ENABLED = True
-PROXY_HOST = "192.168.10.12"
-PROXY_PORT = 9999
-PROXY_USERNAME = ""  # Nếu proxy cần authentication
-PROXY_PASSWORD = ""  # Nếu proxy cần authentication
+# ========================================
+# CẤU HÌNH PROXY (TÙY CHỌN)
+# ========================================
+# Ở nhà: Để PROXY_ENABLED = False
+# Ở công ty: Đổi PROXY_ENABLED = True và điền thông tin proxy
+PROXY_ENABLED = False  # Đổi thành True khi ở công ty
 
-# Cấu hình HTTP/HTTPS proxy cho requests
-PROXY_URL = f"http://{PROXY_HOST}:{PROXY_PORT}"
-PROXY_DICT = {
-    'http': PROXY_URL,
-    'https': PROXY_URL
-}
+# Chỉ cần điền khi PROXY_ENABLED = True
+PROXY_HOST = "192.168.10.12"  # IP proxy server
+PROXY_PORT = 9999              # Port proxy server
+PROXY_USERNAME = ""            # Username nếu cần
+PROXY_PASSWORD = ""            # Password nếu cần
+
+# Cấu hình HTTP/HTTPS proxy cho requests (tự động tạo)
+if PROXY_ENABLED:
+    PROXY_URL = f"http://{PROXY_HOST}:{PROXY_PORT}"
+    PROXY_DICT = {
+        'http': PROXY_URL,
+        'https': PROXY_URL
+    }
+else:
+    PROXY_URL = None
+    PROXY_DICT = {}

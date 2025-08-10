@@ -45,18 +45,7 @@ def cleanup_database():
 def check_resource_usage():
     """Check và báo cáo resource usage"""
     try:
-        from scripts.monitor_costs import RailwayCostMonitor
-        
-        monitor = RailwayCostMonitor()
-        usage = monitor.get_resource_usage()
-        cost = monitor.estimate_monthly_cost(usage)
-        
-        # Log usage
-        monitor.log_usage()
-        
-        # Warning nếu vượt free tier
-        if not cost['within_free_tier']:
-            print(f"⚠️  WARNING: Estimated cost ${cost['total_monthly']:.2f} exceeds free tier!")
+        print("ℹ️  Resource monitoring disabled in local environment")
             
     except Exception as e:
         logging.error(f"Resource monitoring failed: {e}")

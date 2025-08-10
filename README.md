@@ -7,6 +7,38 @@
 [![Telegram Bot](https://img.shields.io/badge/Telegram%20Bot-API-blue.svg)](https://core.telegram.org/bots/api)
 [![AI Powered](https://img.shields.io/badge/AI-Powered-orange.svg)](https://github.com/features)
 
+## 🚀 **Quick Start (5 phút)**
+
+### **1. ⚡ Cài đặt nhanh**
+```bash
+# Clone và cài đặt
+git clone <your-repo-url>
+cd tele-kanban-bot
+pip install -r requirements.txt
+
+# Copy config và điền thông tin
+cp src/config/example.py src/config/settings.py
+# Chỉnh sửa BOT_TOKEN, MY_USER_ID, MY_USERNAME trong settings.py
+```
+
+### **2. 🎯 Chạy ngay lập tức**
+```bash
+# Windows PowerShell (Khuyến nghị)
+.\run.ps1
+
+# Windows CMD
+run.bat
+
+# Linux/Mac
+./run.sh
+```
+
+### **3. 🌐 Truy cập Dashboard**
+- **URL**: `http://localhost:5000`
+- **Bot**: Tự động chạy và ghi nhận tasks
+
+---
+
 ## 🎯 **Tính năng nổi bật**
 
 ### 🚀 **Auto-Refresh & Real-Time Updates** ⭐ MỚI!
@@ -76,8 +108,7 @@ Tele Kanban Bot/
 ├── 🎯 main.py                        # Main entry point (khuyến nghị)
 ├── 📦 requirements.txt               # Python dependencies
 ├── 🗄️ tasks.db                      # SQLite database (auto-created)
-├── 🚂 railway.toml                   # Railway deployment config
-├── 🐳 Procfile                       # Heroku/Railway process config
+
 └── 📖 README.md                      # Hướng dẫn này
 ```
 
@@ -99,11 +130,62 @@ pip install -r requirements.txt
 cp src/config/example.py src/config/settings.py
 ```
 
-### **3. 🌐 Cấu hình Proxy (Bắt buộc ở môi trường công ty)**
-Nếu bạn ở môi trường công ty cần proxy để kết nối internet:
+### **3. 🚀 Chạy Project (Khuyến nghị)**
+
+#### **🎯 Sử dụng Script tự động (Khuyến nghị)**
+```bash
+# Windows PowerShell (Khuyến nghị)
+.\run.ps1                 # Chạy cả bot và dashboard
+.\run.ps1 bot             # Chỉ chạy bot
+.\run.ps1 web             # Chỉ chạy dashboard
+.\run.ps1 test            # Test proxy connection
+.\run.ps1 install         # Cài đặt dependencies
+.\run.ps1 help            # Hiển thị hướng dẫn
+
+# Windows CMD
+run.bat                   # Chạy cả bot và dashboard
+run.bat bot               # Chỉ chạy bot
+run.bat web               # Chỉ chạy dashboard
+run.bat test              # Test proxy connection
+run.bat install           # Cài đặt dependencies
+run.bat help              # Hiển thị hướng dẫn
+
+# Linux/Mac (Terminal)
+chmod +x run.sh           # Cấp quyền thực thi (chỉ cần làm 1 lần)
+./run.sh                  # Chạy cả bot và dashboard
+./run.sh bot              # Chỉ chạy bot
+./run.sh web              # Chỉ chạy dashboard
+./run.sh test             # Test proxy connection
+./run.sh install          # Cài đặt dependencies
+./run.sh help             # Hiển thị hướng dẫn
+```
+
+#### **🐍 Chạy trực tiếp với Python**
+```bash
+# Chạy cả bot và dashboard
+python main.py
+
+# Chỉ chạy bot
+python main.py bot
+
+# Chỉ chạy dashboard
+python main.py web
+
+# Chạy cả hai
+python main.py both
+```
+
+### **3. 🌐 Cấu hình Proxy (Tùy chọn)**
+**Ở nhà**: Không cần proxy, để `PROXY_ENABLED = False` (mặc định)
+
+**Ở công ty**: Cần proxy để kết nối internet, đổi `PROXY_ENABLED = True`
 
 ```python
 # Trong src/config/settings.py
+# Ở nhà: Để mặc định
+PROXY_ENABLED = False
+
+# Ở công ty: Đổi thành True và điền thông tin
 PROXY_ENABLED = True
 PROXY_HOST = "192.168.10.12"  # IP proxy server
 PROXY_PORT = 9999              # Port proxy server
@@ -111,8 +193,14 @@ PROXY_USERNAME = ""            # Username nếu cần
 PROXY_PASSWORD = ""            # Password nếu cần
 ```
 
-**Test proxy connection:**
+**Test proxy connection (chỉ khi ở công ty):**
 ```bash
+# Sử dụng script (khuyến nghị)
+.\run.ps1 test            # Windows PowerShell
+run.bat test              # Windows CMD
+./run.sh test             # Linux/Mac
+
+# Hoặc chạy trực tiếp
 python test_proxy.py
 ```
 
@@ -120,28 +208,37 @@ python test_proxy.py
 # - BOT_TOKEN: Lấy từ @BotFather
 # - MY_USER_ID: ID Telegram của bạn  
 # - MY_USERNAME: Username Telegram (không có @)
-```
 
 ### **3. 🎯 Chạy Bot**
 
-#### **🔄 Cách 1: Chạy cả Bot và Dashboard (Khuyến nghị)**
+#### **🎯 Cách 1: Sử dụng Script tự động (Khuyến nghị)**
 ```bash
-python main.py
-# hoặc
-python main.py --mode both
+# Windows PowerShell (Khuyến nghị)
+.\run.ps1                 # Chạy cả bot và dashboard
+.\run.ps1 bot             # Chỉ chạy bot
+.\run.ps1 web             # Chỉ chạy dashboard
+
+# Windows CMD
+run.bat                   # Chạy cả bot và dashboard
+run.bat bot               # Chỉ chạy bot
+run.bat web               # Chỉ chạy dashboard
+
+# Linux/Mac (Terminal)
+./run.sh                  # Chạy cả bot và dashboard
+./run.sh bot              # Chỉ chạy bot
+./run.sh web              # Chỉ chạy dashboard
 ```
 
-#### **🎯 Cách 2: Chạy riêng từng service**
+#### **🔄 Cách 2: Chạy trực tiếp với Python**
 ```bash
-# Chỉ bot
-python main.py --mode bot
+# Chạy cả Bot và Dashboard (Khuyến nghị)
+python main.py
 # hoặc
-python scripts/start_bot.py
+python main.py both
 
-# Chỉ dashboard (với đầy đủ tính năng auto-refresh)
-python main.py --mode web
-# hoặc
-python scripts/start_dashboard.py
+# Chạy riêng từng service
+python main.py bot        # Chỉ bot
+python main.py web        # Chỉ dashboard
 ```
 
 ## 🎮 **Cách sử dụng**
@@ -217,23 +314,7 @@ POST /api/tasks/{id}/cancel  # Hủy task
 
 ## 🚀 **Deployment**
 
-### **🌐 Railway (Khuyến nghị)**
-```bash
-# 1. Push code lên GitHub
-git add .
-git commit -m "Deploy to Railway"
-git push origin main
-
-# 2. Connect GitHub repo với Railway
-# 3. Railway sẽ auto-deploy khi có push mới
-```
-
-### **🐳 Heroku**
-```bash
-# Sử dụng Procfile có sẵn
-heroku create your-app-name
-git push heroku main
-```
+**⚠️ Lưu ý**: Project này được thiết kế để chạy trên môi trường local. Không có cấu hình deployment cloud.
 
 ## 🐛 **Troubleshooting**
 
@@ -268,7 +349,7 @@ taskkill /pid <PID> /f
 - **Memory Usage**: ~50MB cho bot + dashboard
 
 ### **📈 Monitoring:**
-- **Health Check**: `/health` endpoint cho Railway
+- **Health Check**: `/health` endpoint
 - **Stats API**: `/api/stats` cho dashboard monitoring
 - **Error Logging**: Console logs với timestamps
 
