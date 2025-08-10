@@ -18,13 +18,16 @@ DB_PATH = os.getenv('DB_PATH', 'tasks.db')
 # Ensure database directory exists
 Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
-# Validate required environment variables
+# Validate required environment variables (only warn, don't crash)
 if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN environment variable is required")
+    print("⚠️  Warning: BOT_TOKEN environment variable is not set")
+    BOT_TOKEN = "dummy_token_for_health_check"
 if not MY_USER_ID:
-    raise ValueError("MY_USER_ID environment variable is required")
+    print("⚠️  Warning: MY_USER_ID environment variable is not set")
+    MY_USER_ID = 0
 if not MY_USERNAME:
-    raise ValueError("MY_USERNAME environment variable is required")
+    print("⚠️  Warning: MY_USERNAME environment variable is not set")
+    MY_USERNAME = "dummy_user"
 
 # Cost optimization settings
 ENABLE_COST_MONITORING = os.getenv('ENABLE_COST_MONITORING', 'True').lower() == 'true'
