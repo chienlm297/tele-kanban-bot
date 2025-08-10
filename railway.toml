@@ -1,11 +1,15 @@
 [build]
-builder = "NIXPACKS"
+builder = "nixpacks"
 
 [deploy]
-healthcheckPath = "/api/stats"
-healthcheckTimeout = 30
-restartPolicyType = "ON_FAILURE"
+startCommand = "python main.py --mode web"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+
+[deploy.envs]
+RAILWAY_ENVIRONMENT = "production"
 
 # Tối ưu resource limits
 [deploy.resources]

@@ -1,2 +1,2 @@
-web: python main.py --mode web
+web: python startup.py
 worker: python main.py --mode bot

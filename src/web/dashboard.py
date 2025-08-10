@@ -19,8 +19,16 @@ def dashboard():
 @app.route('/api/stats')
 def api_stats():
     """API lấy thống kê"""
-    stats = db.get_stats()
-    return jsonify(stats)
+    try:
+        stats = db.get_stats()
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint cho Railway"""
+    return jsonify({'status': 'healthy', 'timestamp': '2024-01-01'})
 
 @app.route('/api/tasks')
 def api_tasks():
@@ -241,9 +249,18 @@ def api_analyze_task(task_id):
 if __name__ == '__main__':
     # Production optimizations
     debug_mode = settings.DEBUG if hasattr(settings, 'DEBUG') else False
+    
+    # Production mode: sử dụng PORT từ environment
+    port = int(os.getenv('PORT', settings.WEB_PORT))
+    host = '0.0.0.0'
+    
+    print(f"🌐 Khởi động dashboard trên {host}:{port}")
+    print(f"🔧 Debug mode: {debug_mode}")
+    print(f"🌍 Environment: {'Production' if os.getenv('RAILWAY_ENVIRONMENT') else 'Development'}")
+    
     app.run(
-        host='0.0.0.0', 
-        port=settings.WEB_PORT, 
+        host=host, 
+        port=port, 
         debug=debug_mode,
         threaded=True,  # Enable threading for better performance
         processes=1     # Single process to save memory

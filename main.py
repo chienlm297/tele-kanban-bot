@@ -29,10 +29,19 @@ def run_dashboard():
         from src.config import settings
         from src.web.dashboard import app
         print("🌐 Khởi động Web Dashboard...")
-        print(f"✅ Dashboard: http://localhost:{settings.WEB_PORT}")
-        app.run(host='0.0.0.0', port=settings.WEB_PORT, debug=False)
+        
+        # Production mode: sử dụng PORT từ environment
+        port = int(os.getenv('PORT', settings.WEB_PORT))
+        host = '0.0.0.0'
+        
+        print(f"✅ Dashboard: http://{host}:{port}")
+        print(f"🌐 Environment: {'Production' if os.getenv('RAILWAY_ENVIRONMENT') else 'Development'}")
+        
+        app.run(host=host, port=port, debug=False, threaded=True)
     except Exception as e:
         print(f"❌ Lỗi chạy dashboard: {e}")
+        import traceback
+        traceback.print_exc()
 
 def check_dependencies():
     """Kiểm tra dependencies"""
