@@ -33,11 +33,23 @@ def health_check():
 @app.route('/api/tasks')
 def api_tasks():
     """API lấy danh sách tasks"""
-    task_type = request.args.get('type', 'pending')
+    status = request.args.get('status', 'pending')
     
-    if task_type == 'all':
+    if status == 'all':
         tasks = db.get_all_tasks(100)
+    elif status == 'pending':
+        tasks = db.get_pending_tasks()
+    elif status == 'completed':
+        all_tasks = db.get_all_tasks(100)
+        tasks = [task for task in all_tasks if task['status'] == 'completed']
+    elif status == 'cancelled':
+        all_tasks = db.get_all_tasks(100)
+        tasks = [task for task in all_tasks if task['status'] == 'cancelled']
+    elif status == 'in_progress':
+        all_tasks = db.get_all_tasks(100)
+        tasks = [task for task in all_tasks if task['status'] == 'in_progress']
     else:
+        # Default to pending if unknown status
         tasks = db.get_pending_tasks()
     
     return jsonify(tasks)
@@ -186,7 +198,7 @@ def send_telegram_reply(task):
         url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
         data = {
             'chat_id': chat_id,
-            'text': f"🎉 Task #{task['id']} đã được hoàn thành từ web dashboard!",
+            'text': f"🎉 Task #{task['id']} done!",
             'reply_to_message_id': message_id
         }
         

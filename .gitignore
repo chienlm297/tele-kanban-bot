@@ -36,8 +36,6 @@ venv.bak/
 *~
 
 # Config files with sensitive data
-src/config/settings.py
-config.py
 .env
 .env.local
 .env.production

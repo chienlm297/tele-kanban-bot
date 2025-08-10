@@ -166,6 +166,18 @@
             margin-bottom: 10px;
         }
         
+        .task-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
         .task-id {
             font-weight: bold;
             color: #667eea;
@@ -815,7 +827,7 @@
                     return;
                 }
                 
-                const taskElement = createTaskElement(task, type);
+                const taskElement = createTaskElement(task, type, index);
                 taskElement.style.opacity = '0';
                 taskElement.style.transform = 'translateX(20px)';
                 container.appendChild(taskElement);
@@ -857,7 +869,7 @@
         }
         
         // Hàm tạo task element
-        function createTaskElement(task, type) {
+        function createTaskElement(task, type, index = 0) {
             const taskElement = document.createElement('div');
             taskElement.className = 'task-item';
             taskElement.id = `task-${task.id}`;
@@ -874,6 +886,7 @@
             
             taskElement.innerHTML = `
                 <div class="task-header">
+                    <div class="task-count">📋 ${index + 1}</div>
                     <div class="task-id">#${task.id}</div>
                     <div class="task-status ${statusClass}">${statusText}</div>
                 </div>
