@@ -414,6 +414,26 @@
             transition: all 0.3s ease;
         }
         
+        /* Trạng thái đang cập nhật */
+        .tasks-container.updating {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        
+        .tasks-container.updating::after {
+            content: '🔄 Đang cập nhật...';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            z-index: 1000;
+        }
+        
         /* AI insights header animation */
         .ai-insights {
             transition: all 0.3s ease;
@@ -746,35 +766,71 @@
                 return;
             }
             
+            // Kiểm tra xem có đang cập nhật không để tránh duplicate
+            if (container.classList.contains('updating')) {
+                console.log('🔄 Đang cập nhật, bỏ qua request mới');
+                return;
+            }
+            
+            // Đánh dấu đang cập nhật
+            container.classList.add('updating');
+            
             // Xóa tất cả tasks cũ một cách mượt mà
             const existingTasks = container.querySelectorAll('.task-item');
-            existingTasks.forEach((task, index) => {
-                setTimeout(() => {
-                    task.style.opacity = '0';
-                    task.style.transform = 'translateX(-20px)';
+            if (existingTasks.length > 0) {
+                existingTasks.forEach((task, index) => {
                     setTimeout(() => {
-                        if (task.parentNode) {
-                            task.parentNode.removeChild(task);
-                        }
-                    }, 300);
-                }, index * 50); // Staggered removal
+                        task.style.opacity = '0';
+                        task.style.transform = 'translateX(-20px)';
+                        setTimeout(() => {
+                            if (task.parentNode) {
+                                task.parentNode.removeChild(task);
+                            }
+                        }, 300);
+                    }, index * 50); // Staggered removal
+                });
+                
+                // Đợi tất cả tasks cũ được xóa xong
+                setTimeout(() => {
+                    addNewTasks(container, tasks, type);
+                }, existingTasks.length * 50 + 400);
+            } else {
+                // Không có tasks cũ, thêm mới ngay
+                addNewTasks(container, tasks, type);
+            }
+        }
+        
+        // Hàm thêm tasks mới
+        function addNewTasks(container, tasks, type) {
+            // Kiểm tra xem có task nào bị duplicate không
+            const existingTaskIds = Array.from(container.querySelectorAll('.task-item')).map(el => {
+                const id = el.id.replace('task-', '');
+                return parseInt(id);
+            }).filter(id => !isNaN(id));
+            
+            tasks.forEach((task, index) => {
+                // Kiểm tra xem task này đã tồn tại chưa
+                if (existingTaskIds.includes(task.id)) {
+                    console.log(`⚠️ Task #${task.id} đã tồn tại, bỏ qua`);
+                    return;
+                }
+                
+                const taskElement = createTaskElement(task, type);
+                taskElement.style.opacity = '0';
+                taskElement.style.transform = 'translateX(20px)';
+                container.appendChild(taskElement);
+                
+                // Animate in với delay
+                setTimeout(() => {
+                    taskElement.style.opacity = '1';
+                    taskElement.style.transform = 'translateX(0)';
+                }, index * 100);
             });
             
-            // Thêm tasks mới một cách mượt mà
+            // Hoàn thành cập nhật
             setTimeout(() => {
-                tasks.forEach((task, index) => {
-                    const taskElement = createTaskElement(task, type);
-                    taskElement.style.opacity = '0';
-                    taskElement.style.transform = 'translateX(20px)';
-                    container.appendChild(taskElement);
-                    
-                    // Animate in với delay
-                    setTimeout(() => {
-                        taskElement.style.opacity = '1';
-                        taskElement.style.transform = 'translateX(0)';
-                    }, index * 100 + 400); // Staggered appearance
-                });
-            }, existingTasks.length * 50 + 400);
+                container.classList.remove('updating');
+            }, tasks.length * 100 + 200);
         }
         
         // Hàm hiển thị thông báo trống
@@ -1551,15 +1607,29 @@
         // WebSocket-like polling cho real-time updates
         function startRealTimeUpdates() {
             // Polling mỗi 10 giây để kiểm tra thay đổi
+            let updateTimeout;
             setInterval(() => {
                 if (isAutoRefreshEnabled) {
-                    checkForUpdates();
+                    // Debounce updates để tránh gọi quá nhiều
+                    clearTimeout(updateTimeout);
+                    updateTimeout = setTimeout(() => {
+                        checkForUpdates();
+                    }, 500);
                 }
             }, 10000); // 10 giây
         }
         
         // Kiểm tra có update mới không
         function checkForUpdates() {
+            // Kiểm tra xem có đang cập nhật không để tránh duplicate
+            if (document.body.classList.contains('checking-updates')) {
+                console.log('🔄 Đang kiểm tra updates, bỏ qua request mới');
+                return;
+            }
+            
+            // Đánh dấu đang kiểm tra
+            document.body.classList.add('checking-updates');
+            
             // Kiểm tra stats trước
             fetch('/api/stats')
                 .then(response => response.json())
@@ -1600,6 +1670,11 @@
                         console.log('⚠️ Không thể kiểm tra task updates:', error);
                     });
             }
+            
+            // Hoàn thành kiểm tra sau 1 giây
+            setTimeout(() => {
+                document.body.classList.remove('checking-updates');
+            }, 1000);
         }
         
         // Hàm lấy danh sách task IDs hiện tại
