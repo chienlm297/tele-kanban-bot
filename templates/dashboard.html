@@ -313,6 +313,40 @@
             pointer-events: none;
         }
         
+        /* Hiệu ứng cập nhật status mượt mà */
+        .task-card.status-updating {
+            transition: all 0.3s ease;
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Border color cho từng status */
+        .task-card.task-completed {
+            border-left: 4px solid #28a745;
+        }
+        
+        .task-card.task-in-progress {
+            border-left: 4px solid #007bff;
+        }
+        
+        .task-card.task-pending {
+            border-left: 4px solid #6c757d;
+        }
+        
+        .task-card.task-cancelled {
+            border-left: 4px solid #dc3545;
+        }
+        
+        /* Animation cho stat cards */
+        .stat-card .number {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover .number {
+            transform: scale(1.1);
+            color: #667eea;
+        }
+        
         .priority-badge {
             padding: 4px 12px;
             border-radius: 12px;
@@ -803,8 +837,8 @@
         }
         
         function refreshData() {
-            loadStats();
-            loadTasks(currentTab);
+            // Chỉ cập nhật stats, không reload tasks để tránh nháy
+            updateStatsOnly();
             
             // Animation for refresh button
             const btn = document.querySelector('.refresh-btn');
@@ -812,6 +846,132 @@
             setTimeout(() => {
                 btn.style.transform = 'scale(1)';
             }, 300);
+        }
+        
+        // Hàm mới: chỉ cập nhật stats mà không reload tasks
+        function updateStatsOnly() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Cập nhật từng stat card một cách mượt mà
+                    updateStatCard('total-tasks', data.total);
+                    updateStatCard('pending-tasks', data.pending);
+                    updateStatCard('completed-tasks', data.completed);
+                    updateStatCard('in-progress-tasks', data.in_progress);
+                    updateStatCard('cancelled-tasks', data.cancelled);
+                })
+                .catch(error => {
+                    console.error('Lỗi cập nhật stats:', error);
+                });
+        }
+        
+        // Hàm cập nhật từng stat card một cách mượt mà
+        function updateStatCard(statId, newValue) {
+            const statElement = document.getElementById(statId);
+            if (!statElement) return;
+            
+            const numberElement = statElement.querySelector('.number');
+            if (!numberElement) return;
+            
+            const currentValue = parseInt(numberElement.textContent) || 0;
+            const targetValue = newValue;
+            
+            // Nếu giá trị không thay đổi, không làm gì
+            if (currentValue === targetValue) return;
+            
+            // Animation cập nhật số với hiệu ứng mượt mà
+            animateNumberChange(numberElement, currentValue, targetValue);
+        }
+        
+        // Hàm animation thay đổi số
+        function animateNumberChange(element, from, to) {
+            const duration = 500; // 0.5 giây
+            const startTime = performance.now();
+            
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function để animation mượt mà
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                const currentValue = Math.round(from + (to - from) * easeOutQuart);
+                
+                element.textContent = currentValue;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                }
+            }
+            
+            requestAnimationFrame(updateNumber);
+        }
+        
+        // Hàm cập nhật task status mà không reload toàn bộ
+        function updateTaskStatus(taskId, newStatus, buttonElement) {
+            const taskElement = document.getElementById(`task-${taskId}`);
+            if (!taskElement) return;
+            
+            // Cập nhật trạng thái task với animation mượt mà
+            taskElement.classList.add('status-updating');
+            
+            // Cập nhật button style
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = getStatusButtonText(newStatus);
+                buttonElement.style.background = getStatusButtonColor(newStatus);
+            }
+            
+            // Cập nhật task card style
+            updateTaskCardStyle(taskElement, newStatus);
+            
+            // Xóa class loading
+            setTimeout(() => {
+                taskElement.classList.remove('status-updating');
+                taskElement.classList.remove('completing');
+            }, 300);
+        }
+        
+        // Hàm lấy text cho button theo status
+        function getStatusButtonText(status) {
+            const statusTexts = {
+                'completed': '✅ Đã hoàn thành',
+                'in_progress': '🔄 Đang làm',
+                'pending': '⏳ Đang chờ',
+                'cancelled': '❌ Đã hủy'
+            };
+            return statusTexts[status] || '✅ Hoàn thành';
+        }
+        
+        // Hàm lấy màu cho button theo status
+        function getStatusButtonColor(status) {
+            const statusColors = {
+                'completed': '#28a745',
+                'in_progress': '#007bff',
+                'pending': '#6c757d',
+                'cancelled': '#dc3545'
+            };
+            return statusColors[status] || '#28a745';
+        }
+        
+        // Hàm cập nhật style của task card theo status
+        function updateTaskCardStyle(taskElement, status) {
+            // Xóa tất cả status classes cũ
+            taskElement.classList.remove('task-completed', 'task-in-progress', 'task-pending', 'task-cancelled');
+            
+            // Thêm status class mới
+            taskElement.classList.add(`task-${status}`);
+            
+            // Cập nhật border color
+            const borderColors = {
+                'completed': '#28a745',
+                'in_progress': '#007bff',
+                'pending': '#6c757d',
+                'cancelled': '#dc3545'
+            };
+            
+            if (borderColors[status]) {
+                taskElement.style.borderLeft = `4px solid ${borderColors[status]}`;
+            }
         }
         
         // Auto refresh every 30 seconds
@@ -836,15 +996,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Show success message
-                    button.innerHTML = '✅ Đã hoàn thành';
-                    button.style.background = '#28a745';
+                    // Cập nhật UI mà không reload toàn bộ
+                    updateTaskStatus(taskId, 'completed', button);
                     
-                    // Smart refresh - chỉ refresh stats, không refresh toàn bộ tasks
+                    // Chỉ cập nhật stats, không reload tasks
                     setTimeout(() => {
-                        loadStats();
+                        updateStatsOnly();
                         updateLastUpdateTime();
-                    }, 1000);
+                    }, 500);
                     
                     // Show notification
                     showNotification('success', data.message);
@@ -884,13 +1043,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    button.innerHTML = '🔄 Đang làm';
-                    button.style.background = '#007bff'; // A different color for in_progress
-                    taskElement.classList.remove('completing');
+                    // Cập nhật UI mà không reload toàn bộ
+                    updateTaskStatus(taskId, 'in_progress', button);
                     showNotification('success', data.message);
-                    // Smart refresh - chỉ refresh stats, không refresh toàn bộ tasks
-                    loadStats();
-                    updateLastUpdateTime();
+                    // Chỉ cập nhật stats, không reload tasks
+                    setTimeout(() => {
+                        updateStatsOnly();
+                        updateLastUpdateTime();
+                    }, 500);
                 } else {
                     button.disabled = false;
                     button.innerHTML = '🔄 Đang làm';
@@ -926,13 +1086,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    button.innerHTML = '⏳ Đang chờ';
-                    button.style.background = '#6c757d'; // A different color for pending
-                    taskElement.classList.remove('completing');
+                    // Cập nhật UI mà không reload toàn bộ
+                    updateTaskStatus(taskId, 'pending', button);
                     showNotification('success', data.message);
-                    // Smart refresh - chỉ refresh stats, không refresh toàn bộ tasks
-                    loadStats();
-                    updateLastUpdateTime();
+                    // Chỉ cập nhật stats, không reload tasks
+                    setTimeout(() => {
+                        updateStatsOnly();
+                        updateLastUpdateTime();
+                    }, 500);
                 } else {
                     button.disabled = false;
                     button.innerHTML = '⏳ Đang chờ';
@@ -968,13 +1129,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    button.innerHTML = '❌ Đã hủy';
-                    button.style.background = '#dc3545'; // A different color for cancelled
-                    taskElement.classList.remove('completing');
+                    // Cập nhật UI mà không reload toàn bộ
+                    updateTaskStatus(taskId, 'cancelled', button);
                     showNotification('success', data.message);
-                    // Smart refresh - chỉ refresh stats, không refresh toàn bộ tasks
-                    loadStats();
-                    updateLastUpdateTime();
+                    // Chỉ cập nhật stats, không reload tasks
+                    setTimeout(() => {
+                        updateStatsOnly();
+                        updateLastUpdateTime();
+                    }, 500);
                 } else {
                     button.disabled = false;
                     button.innerHTML = '❌ Đã hủy';
@@ -1090,7 +1252,7 @@
             
             if (needsRefresh) {
                 console.log('🔄 Smart refresh triggered');
-                refreshData();
+                updateStatsOnly(); // Chỉ cập nhật stats, không reload tasks
                 updateLastUpdateTime();
             }
         }
@@ -1114,7 +1276,7 @@
                     const currentStats = getCurrentStats();
                     if (JSON.stringify(data) !== JSON.stringify(currentStats)) {
                         console.log('🆕 Phát hiện thay đổi, cập nhật dữ liệu...');
-                        refreshData();
+                        updateStatsOnly(); // Chỉ cập nhật stats, không reload tasks
                         updateLastUpdateTime();
                     }
                 })
@@ -1143,7 +1305,8 @@
             refreshBtn.innerHTML = '⏳ Đang cập nhật...';
             refreshBtn.disabled = true;
             
-            refreshData();
+            // Sử dụng hàm mới để tránh nháy
+            updateStatsOnly();
             updateLastUpdateTime();
             
             setTimeout(() => {
