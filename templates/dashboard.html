@@ -204,6 +204,16 @@
         .stat-cancelled { color: #dc3545; }
         .stat-in-progress { color: #17a2b8; }
         
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            border: 2px dashed #ddd;
+        }
+        
         .tabs {
             display: flex;
             background: rgba(255, 255, 255, 0.2);
@@ -778,14 +788,6 @@
             </div>
         </div>
         
-        <!-- Thống kê theo người giao việc -->
-        <div class="assignees-stats-section">
-            <h2 class="section-title">👥 Thống kê theo người giao việc</h2>
-            <div class="assignees-grid" id="assignees-stats">
-                <div class="loading">Đang tải thống kê...</div>
-            </div>
-        </div>
-        
         <div class="tabs">
             <button class="tab" onclick="showTasks('suggestions')">🤖 AI Gợi ý</button>
             <button class="tab active" onclick="showTasks('pending')">⏳ Đang chờ</button>
@@ -793,6 +795,7 @@
             <button class="tab" onclick="showTasks('completed')">✅ Đã hoàn thành</button>
             <button class="tab" onclick="showTasks('cancelled')">❌ Đã hủy</button>
             <button class="tab" onclick="showTasks('all')">📋 Tất cả</button>
+            <button class="tab" onclick="showTasks('assignees')">👥 Người giao việc</button>
         </div>
         
         <div class="tasks-container">
@@ -812,7 +815,6 @@
         // Load dữ liệu khi trang được tải
         window.addEventListener('load', function() {
             loadStats();
-            loadAssigneesStats(); // Load assignees stats khi trang được tải
             loadTasks('pending');
             // Khởi tạo auto-refresh
             startAutoRefresh();
@@ -994,6 +996,19 @@
             }
             
             container.innerHTML = `<div class="empty">${emptyMessage}</div>`;
+        }
+        
+        // Hàm hiển thị nội dung thống kê theo người giao việc
+        function showAssigneesContent() {
+            const content = document.getElementById('tasks-content');
+            content.innerHTML = `
+                <div class="assignees-stats-section">
+                    <h2 class="section-title">👥 Thống kê theo người giao việc</h2>
+                    <div class="assignees-grid" id="assignees-stats">
+                        <div class="loading">Đang tải thống kê...</div>
+                    </div>
+                </div>
+            `;
         }
         
         // Hàm tạo task element
@@ -1266,6 +1281,9 @@
             // Sử dụng DOM manipulation thay vì innerHTML
             if (type === 'suggestions') {
                 loadSuggestions();
+            } else if (type === 'assignees') {
+                showAssigneesContent();
+                loadAssigneesStats();
             } else {
                 loadTasks(type);
             }
@@ -1299,8 +1317,10 @@
                     console.error('Lỗi cập nhật stats:', error);
                 });
             
-            // Cập nhật thống kê theo người giao việc
-            loadAssigneesStats();
+            // Chỉ cập nhật thống kê theo người giao việc nếu đang ở tab assignees
+            if (currentTab === 'assignees') {
+                loadAssigneesStats();
+            }
         }
         
         // Hàm cập nhật từng stat card một cách mượt mà
@@ -1790,19 +1810,21 @@
                     console.log('⚠️ Không thể kiểm tra stats updates:', error);
                 });
             
-            // Kiểm tra thống kê theo người giao việc
-            fetch('/api/stats/assignees')
-                .then(response => response.json())
-                .then(assignees => {
-                    // Cập nhật thống kê theo người giao việc nếu có thay đổi
-                    const container = document.getElementById('assignees-stats');
-                    if (container) {
-                        updateAssigneesStats(container, assignees);
-                    }
-                })
-                .catch(error => {
-                    console.log('⚠️ Không thể kiểm tra assignees stats updates:', error);
-                });
+            // Kiểm tra thống kê theo người giao việc (chỉ khi đang ở tab assignees)
+            if (currentTab === 'assignees') {
+                fetch('/api/stats/assignees')
+                    .then(response => response.json())
+                    .then(assignees => {
+                        // Cập nhật thống kê theo người giao việc nếu có thay đổi
+                        const container = document.getElementById('assignees-stats');
+                        if (container) {
+                            updateAssigneesStats(container, assignees);
+                        }
+                    })
+                    .catch(error => {
+                        console.log('⚠️ Không thể kiểm tra assignees stats updates:', error);
+                    });
+            }
             
             // Kiểm tra task list updates (chỉ khi không phải đang chuyển tab)
             if (currentTab && currentTab !== 'suggestions') {
@@ -1915,8 +1937,10 @@
             updateStatsOnly();
             updateLastUpdateTime();
             
-            // Cập nhật thống kê theo người giao việc
-            loadAssigneesStats();
+            // Cập nhật thống kê theo người giao việc (chỉ khi đang ở tab assignees)
+            if (currentTab === 'assignees') {
+                loadAssigneesStats();
+            }
             
             setTimeout(() => {
                 refreshBtn.innerHTML = originalText;
