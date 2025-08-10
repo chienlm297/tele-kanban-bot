@@ -26,7 +26,7 @@ def run_bot():
 def run_dashboard():
     """Chạy web dashboard"""
     try:
-        from src.config import settings
+        from src.config.settings import *
         from src.web.dashboard import app
         print("🌐 Khởi động Web Dashboard...")
         print(f"✅ Dashboard: http://localhost:{settings.WEB_PORT}")

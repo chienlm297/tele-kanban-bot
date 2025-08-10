@@ -19,7 +19,7 @@ def cleanup_database():
         if os.getenv('RAILWAY_ENVIRONMENT'):
             from src.config import production as settings
         else:
-            from src.config import settings
+            from src.config.settings import *
             
         from src.database.optimized import OptimizedDatabase
         

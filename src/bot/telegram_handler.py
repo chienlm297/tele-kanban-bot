@@ -10,7 +10,7 @@ import os
 if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RENDER') or os.getenv('DYNO'):
     from src.config import production as settings
 else:
-    from src.config import settings
+    from src.config.settings import *
 
 # Thiết lập logging
 logging.basicConfig(
