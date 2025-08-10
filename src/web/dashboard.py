@@ -91,7 +91,8 @@ def complete_task_api(task_id):
         
         if success:
             # Gửi message reply trong Telegram qua HTTP API trực tiếp
-            send_telegram_reply(task)
+            # Truyền comment để hiển thị trong tin nhắn Telegram
+            send_telegram_reply(task, comment)
             
             return jsonify({'success': True, 'message': f'Đã hoàn thành task #{task_id}'})
         else:
@@ -204,24 +205,30 @@ def api_in_progress_tasks():
     in_progress_tasks = [task for task in all_tasks if task['status'] == 'in_progress']
     return jsonify(in_progress_tasks)
 
-def send_telegram_reply(task):
+def send_telegram_reply(task, comment=None):
     """Gửi reply message trong Telegram khi hoàn thành từ web"""
     try:
         chat_id = task['chat_id']
         message_id = task['message_id']
         
+        # Tạo nội dung tin nhắn với comment nếu có
+        if comment and comment.strip():
+            message_text = f"🎉 Task #{task['id']} done!\n\n💬 Ghi chú: {comment}"
+        else:
+            message_text = f"🎉 Task #{task['id']} done!"
+        
         # Gửi request trực tiếp đến Telegram API
         url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
         data = {
             'chat_id': chat_id,
-            'text': f"🎉 Task #{task['id']} done!",
+            'text': message_text,
             'reply_to_message_id': message_id
         }
         
         response = requests.post(url, json=data)
         
         if response.status_code == 200:
-            print(f"✅ Đã gửi reply hoàn thành task #{task['id']} trong chat {chat_id}")
+            print(f"✅ Đã gửi reply hoàn thành task #{task['id']} trong chat {chat_id} với comment: '{comment}'")
         else:
             print(f"❌ Lỗi gửi reply: {response.status_code} - {response.text}")
         
