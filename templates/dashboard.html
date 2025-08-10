@@ -729,6 +729,108 @@
             transform: scale(1.1);
         }
         
+        /* Modal Styles */
+        .comment-modal {
+            display: block; /* Show by default when created */
+            position: fixed; /* Stay in place */
+            z-index: 10000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+            padding-top: 60px;
+        }
+
+        .comment-modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            max-width: 600px;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .comment-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comment-modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .comment-modal-body {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .comment-modal-body p {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .comment-modal-body textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+            resize: vertical; /* Allow vertical resizing */
+            font-size: 1em;
+            color: #333;
+        }
+
+        .comment-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
         @media (max-width: 768px) {
             .task-header {
                 flex-direction: column;
@@ -740,6 +842,21 @@
                 flex-direction: column;
                 gap: 5px;
             }
+        }
+        
+        .task-notes {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-left: 3px solid #17a2b8;
+            border-radius: 4px;
+            font-style: italic;
+            color: #495057;
+            font-size: 0.9em;
+        }
+        
+        .task-notes strong {
+            color: #17a2b8;
         }
     </style>
 </head>
@@ -1042,7 +1159,7 @@
                 <div class="task-text">
                     ${task.message_text || '[Media/File]'}
                 </div>
-                ${task.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">💬 Ghi chú: ${task.notes}</div>` : ''}
+                ${task.notes ? `<div class="task-notes">💬 <strong>Ghi chú:</strong> ${task.notes}</div>` : ''}
                 
                 <div class="task-actions">
                     <a href="${telegramLink}" target="_blank" class="btn btn-telegram">
@@ -1220,46 +1337,46 @@
             switch(task.status) {
                 case 'pending':
                     buttons += `
-                        <button class="btn btn-in-progress" onclick="setTaskInProgress(${task.id})">
+                        <button class="btn btn-in-progress" onclick="showCommentPopup('in_progress', ${task.id})">
                             🔄 Bắt đầu làm
                         </button>
-                        <button class="btn btn-complete" onclick="completeTask(${task.id})">
+                        <button class="btn btn-complete" onclick="showCommentPopup('complete', ${task.id})">
                             ✅ Hoàn thành
                         </button>
-                        <button class="btn btn-cancel" onclick="cancelTask(${task.id})">
+                        <button class="btn btn-cancel" onclick="showCommentPopup('cancel', ${task.id})">
                             ❌ Hủy bỏ
                         </button>
                     `;
                     break;
                 case 'in_progress':
                     buttons += `
-                        <button class="btn btn-pending" onclick="setTaskPending(${task.id})">
+                        <button class="btn btn-pending" onclick="showCommentPopup('pending', ${task.id})">
                             ⏳ Quay lại chờ
                         </button>
-                        <button class="btn btn-complete" onclick="completeTask(${task.id})">
+                        <button class="btn btn-complete" onclick="showCommentPopup('complete', ${task.id})">
                             ✅ Hoàn thành
                         </button>
-                        <button class="btn btn-cancel" onclick="cancelTask(${task.id})">
+                        <button class="btn btn-cancel" onclick="showCommentPopup('cancel', ${task.id})">
                             ❌ Hủy bỏ
                         </button>
                     `;
                     break;
                 case 'completed':
                     buttons += `
-                        <button class="btn btn-pending" onclick="setTaskPending(${task.id})">
+                        <button class="btn btn-pending" onclick="showCommentPopup('pending', ${task.id})">
                             ⏳ Quay lại chờ
                         </button>
-                        <button class="btn btn-cancel" onclick="cancelTask(${task.id})">
+                        <button class="btn btn-cancel" onclick="showCommentPopup('cancel', ${task.id})">
                             ❌ Hủy bỏ
                         </button>
                     `;
                     break;
                 case 'cancelled':
                     buttons += `
-                        <button class="btn btn-pending" onclick="setTaskPending(${task.id})">
+                        <button class="btn btn-pending" onclick="showCommentPopup('pending', ${task.id})">
                             ⏳ Quay lại chờ
                         </button>
-                        <button class="btn btn-in-progress" onclick="setTaskInProgress(${task.id})">
+                        <button class="btn btn-in-progress" onclick="showCommentPopup('in_progress', ${task.id})">
                             🔄 Bắt đầu làm
                         </button>
                     `;
@@ -1435,8 +1552,100 @@
         // Auto refresh every 30 seconds
         setInterval(refreshData, 30000);
         
+        // Function để hiển thị popup nhập comment
+        function showCommentPopup(action, taskId, currentStatus = '') {
+            // Tạo modal HTML
+            const modalHTML = `
+                <div id="commentModal" class="comment-modal">
+                    <div class="comment-modal-content">
+                        <div class="comment-modal-header">
+                            <h3>💬 Thêm ghi chú</h3>
+                            <span class="close" onclick="closeCommentModal()">&times;</span>
+                        </div>
+                        <div class="comment-modal-body">
+                            <p><strong>Task #${taskId}</strong> - ${getActionText(action)}</p>
+                            <textarea id="commentText" placeholder="Nhập ghi chú cho task này..." rows="4"></textarea>
+                        </div>
+                        <div class="comment-modal-footer">
+                            <button class="btn btn-secondary" onclick="closeCommentModal()">Hủy</button>
+                            <button class="btn btn-primary" onclick="submitComment('${action}', ${taskId})">Xác nhận</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Thêm modal vào body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Thêm event listeners
+            const modal = document.getElementById('commentModal');
+            const modalContent = modal.querySelector('.comment-modal-content');
+            
+            // Đóng modal khi click bên ngoài
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeCommentModal();
+                }
+            });
+            
+            // Đóng modal khi nhấn ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeCommentModal();
+                }
+            });
+            
+            // Focus vào textarea
+            setTimeout(() => {
+                document.getElementById('commentText').focus();
+            }, 100);
+        }
+        
+        // Function để đóng modal
+        function closeCommentModal() {
+            const modal = document.getElementById('commentModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Function để submit comment
+        function submitComment(action, taskId) {
+            const commentText = document.getElementById('commentText').value.trim();
+            
+            // Đóng modal
+            closeCommentModal();
+            
+            // Thực hiện action với comment
+            switch(action) {
+                case 'complete':
+                    completeTask(taskId, commentText);
+                    break;
+                case 'in_progress':
+                    setTaskInProgress(taskId, commentText);
+                    break;
+                case 'pending':
+                    setTaskPending(taskId, commentText);
+                    break;
+                case 'cancel':
+                    cancelTask(taskId, commentText);
+                    break;
+            }
+        }
+        
+        // Function để lấy text mô tả action
+        function getActionText(action) {
+            switch(action) {
+                case 'complete': return 'Hoàn thành';
+                case 'in_progress': return 'Bắt đầu làm';
+                case 'pending': return 'Quay lại chờ';
+                case 'cancel': return 'Hủy bỏ';
+                default: return action;
+            }
+        }
+
         // Function để hoàn thành task
-        function completeTask(taskId) {
+        function completeTask(taskId, comment = '') {
             const taskElement = document.getElementById(`task-${taskId}`);
             const button = taskElement.querySelector('.btn-complete');
             
@@ -1449,7 +1658,8 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                body: JSON.stringify({ comment: comment })
             })
             .then(response => response.json())
             .then(data => {
@@ -1495,7 +1705,7 @@
         }
 
         // Function để bắt đầu làm task
-        function setTaskInProgress(taskId) {
+        function setTaskInProgress(taskId, comment = '') {
             const taskElement = document.getElementById(`task-${taskId}`);
             const button = taskElement.querySelector('.btn-in-progress');
             
@@ -1508,7 +1718,8 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                body: JSON.stringify({ comment: comment })
             })
             .then(response => response.json())
             .then(data => {
@@ -1552,7 +1763,7 @@
         }
 
         // Function để quay lại chờ task
-        function setTaskPending(taskId) {
+        function setTaskPending(taskId, comment = '') {
             const taskElement = document.getElementById(`task-${taskId}`);
             const button = taskElement.querySelector('.btn-pending');
             
@@ -1565,7 +1776,8 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                body: JSON.stringify({ comment: comment })
             })
             .then(response => response.json())
             .then(data => {
@@ -1608,7 +1820,7 @@
         }
 
         // Function để hủy bỏ task
-        function cancelTask(taskId) {
+        function cancelTask(taskId, comment = '') {
             const taskElement = document.getElementById(`task-${taskId}`);
             const button = taskElement.querySelector('.btn-cancel');
             
@@ -1621,7 +1833,8 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                body: JSON.stringify({ comment: comment })
             })
             .then(response => response.json())
             .then(data => {

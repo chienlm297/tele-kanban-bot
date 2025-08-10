@@ -32,13 +32,15 @@ class TelegramKanbanBot:
                     "🤖 *Kanban Bot đã sẵn sàng!*\n\n"
                     "Bot sẽ tự động:\n"
                     "• Tạo task khi bạn được tag trong nhóm (lặng lẽ lưu vào danh sách)\n"
-                    "• Đánh dấu hoàn thành khi bạn reply 'done'\n\n"
+                    "• Đánh dấu hoàn thành khi bạn reply 'done'\n"
+                    "• *Mới:* Lưu ghi chú khi bạn reply với comment\n\n"
                     "Lệnh có sẵn:\n"
                     "/tasks - Xem danh sách công việc\n"
                     "/ai - Gợi ý AI tasks ưu tiên\n"
                     "/stats - Xem thống kê\n"
                     "/insights - Phân tích productivity\n"
-                    "/help - Hướng dẫn sử dụng",
+                    "/help - Hướng dẫn sử dụng\n\n"
+                    "💡 *Tip:* Reply 'done - đã hoàn thành giao diện' để thêm ghi chú!",
                     parse_mode='Markdown'
                 )
     
@@ -65,6 +67,12 @@ class TelegramKanbanBot:
 - Reply "done", "Done", "DONE"
 - Reply "xong", "Xong", "XONG"
 - Reply "hoàn thành"
+- *Mới:* Bạn có thể thêm ghi chú khi reply, ví dụ: "done - đã hoàn thành giao diện"
+
+*Tính năng ghi chú (Comment):*
+- Khi reply "done" với ghi chú → Bot sẽ lưu ghi chú vào task
+- Ghi chú sẽ hiển thị trong web dashboard
+- Hỗ trợ tiếng Việt và emoji
 
 *Lưu ý:* Bot chỉ hoạt động với chủ sở hữu (bạn).
         """
@@ -294,10 +302,12 @@ class TelegramKanbanBot:
             )
             
             if task:
-                success = self.db.complete_task(task['id'], message.text)
+                # Lưu comment nếu có (toàn bộ message text)
+                comment = message.text.strip() if message.text else ""
+                success = self.db.complete_task(task['id'], comment)
                 if success:
                     # Chỉ đánh dấu hoàn thành, không reply
-                    logger.info(f"✅ Hoàn thành task #{task['id']} (silent mode)")
+                    logger.info(f"✅ Hoàn thành task #{task['id']} với comment: '{comment}' (silent mode)")
                 else:
                     logger.error(f"❌ Lỗi khi hoàn thành task #{task['id']}")
             else:
