@@ -1,6 +1,6 @@
 # 🚀 Deploy Tele Kanban Bot lên Render
 
-Hướng dẫn chi tiết để deploy project lên Render.com với 2 services: Web Dashboard và Telegram Bot Worker.
+Hướng dẫn chi tiết để deploy project lên Render.com với 1 Web Service chạy cả Dashboard và Telegram Bot.
 
 ## 📋 Yêu cầu trước khi deploy
 
@@ -33,7 +33,7 @@ git commit -m "Add Render deployment configuration"
 git push origin main
 ```
 
-## 🌐 Bước 2: Deploy Web Service
+## 🌐 Bước 2: Deploy Web Service (Chạy cả Bot và Dashboard)
 
 1. **Tạo Web Service**:
    - Vào Render Dashboard → **New** → **Web Service**
@@ -41,10 +41,10 @@ git push origin main
    - Chọn branch `main`
 
 2. **Cấu hình Web Service**:
-   - **Name**: `tele-kanban-web`
+   - **Name**: `tele-kanban-bot`
    - **Environment**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `python main.py --mode web`
+   - **Start Command**: `python main.py --mode both`
    - **Plan**: Free (hoặc Starter nếu cần)
 
 3. **Environment Variables**:
@@ -59,28 +59,9 @@ git push origin main
    - **Auto-Deploy**: Yes
    - **Health Check Path**: `/api/stats`
 
-## 🤖 Bước 3: Deploy Bot Worker
+> **Lưu ý**: Service này sẽ chạy cả Telegram Bot và Web Dashboard trong cùng một process, tiết kiệm tài nguyên và phù hợp với Render free plan.
 
-1. **Tạo Background Worker**:
-   - Vào Render Dashboard → **New** → **Background Worker**
-   - Connect cùng repository GitHub
-   - Chọn branch `main`
-
-2. **Cấu hình Worker**:
-   - **Name**: `tele-kanban-bot`
-   - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `python main.py --mode bot`
-   - **Plan**: Free
-
-3. **Environment Variables**:
-   ```
-   RENDER=true
-   TELEGRAM_BOT_TOKEN=your_bot_token_here
-   MY_USER_ID=your_telegram_user_id
-   ```
-
-## 🔧 Bước 4: Cấu hình Environment Variables
+## 🔧 Bước 3: Cấu hình Environment Variables
 
 ### Bắt buộc:
 - `RENDER=true` - Để nhận biết môi trường production
@@ -95,15 +76,15 @@ git push origin main
 - `PROXY_USERNAME` - Proxy username (nếu cần)
 - `PROXY_PASSWORD` - Proxy password (nếu cần)
 
-## 🎯 Bước 5: Verify Deployment
+## 🎯 Bước 4: Verify Deployment
 
 1. **Kiểm tra Web Service**:
    - Truy cập URL được cung cấp bởi Render
    - Kiểm tra dashboard hoạt động bình thường
 
-2. **Kiểm tra Bot Worker**:
-   - Vào Logs của Worker service
-   - Tìm thông báo "✅ Bot đã khởi động thành công"
+2. **Kiểm tra Bot trong cùng service**:
+   - Vào Logs của Web service
+   - Tìm thông báo "🤖 Khởi động Telegram Bot..." và "🌐 Khởi động Web Dashboard..."
    - Test bot bằng cách tag trong Telegram
 
 3. **Test tích hợp**:
@@ -113,32 +94,28 @@ git push origin main
 
 ## 📊 Monitoring & Logs
 
-### Web Service Logs:
-```bash
-# Truy cập logs qua Render Dashboard
-# Hoặc sử dụng Render CLI
-render logs -s tele-kanban-web
-```
-
-### Bot Worker Logs:
+### Service Logs:
 ```bash
 # Truy cập logs qua Render Dashboard
 # Hoặc sử dụng Render CLI
 render logs -s tele-kanban-bot
 ```
 
+Logs sẽ hiển thị cả thông tin của Bot và Dashboard vì chúng chạy trong cùng một service.
+
 ## 🔄 Auto-Deploy
 
 Khi bạn push code mới lên GitHub:
 1. Render sẽ tự động detect changes
-2. Rebuild và redeploy cả 2 services
+2. Rebuild và redeploy service
 3. Zero-downtime deployment
 
 ## 🆓 Render Free Plan Limitations
 
 - **Web Service**: 750 giờ/tháng, sleep sau 15 phút không hoạt động
-- **Background Worker**: 750 giờ/tháng
 - **Database**: Ephemeral (mất data khi restart)
+
+> **Lưu ý**: Khi service sleep, cả bot và dashboard sẽ dừng hoạt động. Service sẽ tự động wake up khi có request HTTP.
 
 ### Giải pháp cho Database:
 1. **Upgrade lên Paid Plan**: $7/tháng cho persistent storage
@@ -182,8 +159,8 @@ Nếu gặp vấn đề:
 ## 🎉 Hoàn thành!
 
 Sau khi hoàn thành các bước trên, bạn sẽ có:
-- ✅ Web Dashboard chạy 24/7 trên Render
-- ✅ Telegram Bot Worker chạy liên tục
+- ✅ Web Dashboard và Telegram Bot chạy trong 1 service trên Render
+- ✅ Tự động sleep/wake theo traffic (free plan)
 - ✅ Auto-deploy khi push code mới
 - ✅ Free hosting (với limitations)
 

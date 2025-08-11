@@ -3,22 +3,11 @@ services:
     name: tele-kanban-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py --mode web
+    startCommand: python main.py --mode both
     plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PORT
         value: 10000
-    autoDeploy: false
-    
-  - type: worker
-    name: tele-kanban-bot-worker
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python main.py --mode bot
-    plan: free
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
     autoDeploy: false
