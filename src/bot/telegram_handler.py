@@ -404,38 +404,47 @@ class TelegramKanbanBot:
     
     def run(self):
         """Chạy bot"""
-        # Cấu hình proxy nếu được bật
-        if hasattr(settings, 'PROXY_ENABLED') and settings.PROXY_ENABLED:
-            logger.info(f"🌐 Sử dụng proxy: {settings.PROXY_URL}")
+        try:
+            # Kiểm tra bot token
+            if not hasattr(settings, 'BOT_TOKEN') or not settings.BOT_TOKEN:
+                raise ValueError("❌ BOT_TOKEN không được cấu hình!")
             
-            # Cấu hình proxy cho python-telegram-bot
-            proxy_url = f"http://{settings.PROXY_HOST}:{settings.PROXY_PORT}"
+            # Cấu hình proxy nếu được bật
+            if hasattr(settings, 'PROXY_ENABLED') and settings.PROXY_ENABLED:
+                logger.info(f"🌐 Sử dụng proxy: {settings.PROXY_URL}")
+                
+                # Cấu hình proxy cho python-telegram-bot
+                proxy_url = f"http://{settings.PROXY_HOST}:{settings.PROXY_PORT}"
+                
+                # Tạo application với proxy
+                application = (
+                    Application.builder()
+                    .token(settings.BOT_TOKEN)
+                    .proxy_url(proxy_url)
+                    .build()
+                )
+            else:
+                logger.info("🌐 Không sử dụng proxy")
+                application = Application.builder().token(settings.BOT_TOKEN).build()
             
-            # Tạo application với proxy
-            application = (
-                Application.builder()
-                .token(settings.BOT_TOKEN)
-                .proxy_url(proxy_url)
-                .build()
-            )
-        else:
-            logger.info("🌐 Không sử dụng proxy")
-            application = Application.builder().token(settings.BOT_TOKEN).build()
-        
-        # Đăng ký handlers
-        application.add_handler(CommandHandler("start", self.start_command))
-        application.add_handler(CommandHandler("help", self.help_command))
-        application.add_handler(CommandHandler("tasks", self.tasks_command))
-        application.add_handler(CommandHandler("ai", self.ai_suggestions_command))
-        application.add_handler(CommandHandler("insights", self.insights_command))
-        application.add_handler(CommandHandler("all", self.all_tasks_command))
-        application.add_handler(CommandHandler("stats", self.stats_command))
-        
-        # Handler cho tất cả messages
-        application.add_handler(MessageHandler(filters.ALL, self.handle_message))
-        
-        logger.info("Bot đang khởi động...")
-        application.run_polling()
+            # Đăng ký handlers
+            application.add_handler(CommandHandler("start", self.start_command))
+            application.add_handler(CommandHandler("help", self.help_command))
+            application.add_handler(CommandHandler("tasks", self.tasks_command))
+            application.add_handler(CommandHandler("ai", self.ai_suggestions_command))
+            application.add_handler(CommandHandler("insights", self.insights_command))
+            application.add_handler(CommandHandler("all", self.all_tasks_command))
+            application.add_handler(CommandHandler("stats", self.stats_command))
+            
+            # Handler cho tất cả messages
+            application.add_handler(MessageHandler(filters.ALL, self.handle_message))
+            
+            logger.info("✅ Bot đã khởi động thành công")
+            application.run_polling(drop_pending_updates=True)
+            
+        except Exception as e:
+            logger.error(f"❌ Lỗi khởi động bot: {e}")
+            raise
 
 if __name__ == "__main__":
     bot = TelegramKanbanBot()

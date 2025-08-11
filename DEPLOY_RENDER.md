@@ -43,7 +43,7 @@ git push origin main
 2. **Cấu hình Web Service**:
    - **Name**: `tele-kanban-bot`
    - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
+   - **Build Command**: `pip install -r requirements.txt --upgrade`
    - **Start Command**: `python main.py --mode both`
    - **Plan**: Free (hoặc Starter nếu cần)
 
@@ -128,11 +128,19 @@ Khi bạn push code mới lên GitHub:
 
 ### Bot không hoạt động:
 ```bash
-# Kiểm tra logs worker
+# Kiểm tra logs service
 # Thường do:
-# 1. TELEGRAM_BOT_TOKEN sai
-# 2. MY_USER_ID sai
+# 1. TELEGRAM_BOT_TOKEN sai hoặc chưa set
+# 2. MY_USER_ID sai hoặc chưa set
 # 3. Network issues
+# 4. Version conflict của python-telegram-bot
+```
+
+### Lỗi `Updater object has no attribute`:
+```bash
+# Lỗi này do version conflict của python-telegram-bot
+# Đã fix bằng cách sử dụng version 20.1 trong requirements.txt
+# Nếu vẫn gặp lỗi, thử rebuild service trên Render
 ```
 
 ### Web dashboard không load:
