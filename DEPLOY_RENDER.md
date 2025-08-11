@@ -47,13 +47,15 @@ git push origin main
    - **Start Command**: `python main.py --mode both`
    - **Plan**: Free (hoặc Starter nếu cần)
 
-3. **Environment Variables**:
+3. **Environment Variables** (quan trọng!):
    ```
    RENDER=true
    TELEGRAM_BOT_TOKEN=your_bot_token_here
    MY_USER_ID=your_telegram_user_id
    PORT=10000
    ```
+   
+   > **Lưu ý**: Nhớ thay `your_bot_token_here` và `your_telegram_user_id` bằng giá trị thật của bạn!
 
 4. **Advanced Settings**:
    - **Auto-Deploy**: Yes

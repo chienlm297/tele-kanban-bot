@@ -1,8 +1,8 @@
 # Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz-example
 
 # Your Telegram User ID (get from @userinfobot)
-MY_USER_ID=your_telegram_user_id
+MY_USER_ID=123456789
 
 # Render Environment (automatically set by Render)
 RENDER=true

@@ -8,7 +8,9 @@ import os
 
 # Import settings from config package
 if os.getenv('RENDER'):
-    from src.config import production as settings
+    import sys
+    sys.path.append('src/config')
+    import production as settings
 else:
     from src.config import settings
 

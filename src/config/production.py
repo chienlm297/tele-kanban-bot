@@ -8,9 +8,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
+BOT_TOKEN = TELEGRAM_BOT_TOKEN  # Alias for compatibility
 if not TELEGRAM_BOT_TOKEN:
-    raise ValueError("❌ TELEGRAM_BOT_TOKEN environment variable is required!")
+    print("⚠️  Warning: TELEGRAM_BOT_TOKEN environment variable is not set!")
 
 # Web Configuration
 WEB_PORT = int(os.getenv('PORT', 10000))
@@ -22,6 +23,7 @@ DB_PATH = DATABASE_PATH  # Alias for compatibility
 
 # Bot Configuration
 MY_USER_ID = int(os.getenv('MY_USER_ID', 0))  # Set your Telegram user ID
+MY_USERNAME = os.getenv('MY_USERNAME', '')  # Your Telegram username
 
 # Proxy Configuration (Optional for production)
 PROXY_ENABLED = os.getenv('PROXY_ENABLED', 'false').lower() == 'true'
