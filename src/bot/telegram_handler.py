@@ -7,7 +7,10 @@ from src.ai.analyzer import TaskAIAnalyzer
 import os
 
 # Import settings from config package
-from src.config import settings
+if os.getenv('RENDER'):
+    from src.config import production as settings
+else:
+    from src.config import settings
 
 # Thiết lập logging
 logging.basicConfig(

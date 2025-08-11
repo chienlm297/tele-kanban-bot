@@ -66,8 +66,14 @@ def check_dependencies():
 
 def check_config():
     """Kiểm tra config"""
-    # Development mode only
-    return True
+    # Check if running on Render (production)
+    if os.getenv('RENDER'):
+        print("🌍 Running on Render (Production)")
+        # Check required environment variables for production
+        if not os.getenv('TELEGRAM_BOT_TOKEN'):
+            print("❌ TELEGRAM_BOT_TOKEN environment variable is required!")
+            return False
+        return True
     
     # Development mode: use settings file
     if not os.path.exists('src/config/settings.py'):

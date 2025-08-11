@@ -5,7 +5,10 @@ import requests
 import os
 
 # Import settings from config package
-from src.config import settings
+if os.getenv('RENDER'):
+    from src.config import production as settings
+else:
+    from src.config import settings
 
 app = Flask(__name__, template_folder='../../templates')
 db = TaskDatabase(settings.DB_PATH)

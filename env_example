@@ -1,0 +1,21 @@
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+
+# Your Telegram User ID (get from @userinfobot)
+MY_USER_ID=your_telegram_user_id
+
+# Render Environment (automatically set by Render)
+RENDER=true
+
+# Web Configuration (automatically set by Render)
+PORT=10000
+
+# Database Path (optional)
+DATABASE_PATH=tasks.db
+
+# Proxy Configuration (optional)
+PROXY_ENABLED=false
+PROXY_HOST=your_proxy_host
+PROXY_PORT=8080
+PROXY_USERNAME=your_proxy_username
+PROXY_PASSWORD=your_proxy_password
