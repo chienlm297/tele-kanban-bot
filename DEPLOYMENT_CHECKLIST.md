@@ -17,7 +17,8 @@
 
 ## 🚀 **Deploy trên Render**
 
-- [ ] **Start Command**: `python main.py --mode both`
+- [ ] **Start Command**: `python3.11 main.py --mode both`
+- [ ] **Python Version**: 3.11.0 (không phải 3.13)
 - [ ] **Environment variables** đã thêm vào Render dashboard
 - [ ] **Service đã khởi động** thành công
 - [ ] **Logs hiển thị** không có lỗi

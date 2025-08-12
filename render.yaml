@@ -2,12 +2,16 @@ services:
   - type: web
     name: tele-kanban-bot
     env: python
-    buildCommand: pip install -r render_requirements.txt
-    startCommand: python main.py --mode both
+    buildCommand: |
+      python3.11 -m pip install --upgrade pip
+      python3.11 -m pip install -r render_requirements.txt
+    startCommand: python3.11 main.py --mode both
     plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: PYTHONPATH
+        value: /opt/render/project/src
       - key: PORT
         value: 10000
       - key: RENDER

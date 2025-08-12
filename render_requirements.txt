@@ -17,7 +17,7 @@ markdown2==2.4.10
 gunicorn==21.2.0
 
 # Image processing (required for telegram bot)
-Pillow==10.0.1
+Pillow>=10.4.0
 
 # Additional system dependencies for Render
 # These are automatically available on Render

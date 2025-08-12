@@ -53,7 +53,8 @@ MY_USERNAME=your_telegram_username
 
 ### **🔧 Nếu gặp lỗi khi deploy:**
 - Xem file `QUICK_DEPLOY.md` để khắc phục
-- Đảm bảo sử dụng `python main.py --mode both`
+- Đảm bảo sử dụng `python3.11 main.py --mode both`
+- **Python Version**: Sử dụng Python 3.11.0 (không phải 3.13)
 - Kiểm tra environment variables đầy đủ
 - **✅ Tất cả các lỗi import, Updater compatibility và dependencies đã được sửa!**
 - **📦 Sử dụng `render_requirements.txt` cho Render.com deployment**

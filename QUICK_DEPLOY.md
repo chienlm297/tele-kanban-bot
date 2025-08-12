@@ -13,8 +13,9 @@ git push origin main
 1. Vào [render.com](https://render.com)
 2. Click "New" → "Web Service"
 3. Connect với GitHub repository
-4. **Start Command**: `python main.py --mode both`
-5. Click "Create Web Service"
+4. **Start Command**: `python3.11 main.py --mode both`
+5. **Python Version**: Đảm bảo chọn Python 3.11.0
+6. Click "Create Web Service"
 
 ### **3. Thêm Environment Variables**
 Trong tab "Environment", thêm:
