@@ -3,11 +3,19 @@ services:
     name: tele-kanban-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py --mode both
+    startCommand: python scripts/start_bot_render.py
     plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PORT
         value: 10000
+      - key: RENDER
+        value: "true"
+      - key: LOG_LEVEL
+        value: "INFO"
+      - key: POLLING_TIMEOUT
+        value: "30"
+      - key: CONNECTION_TIMEOUT
+        value: "30"
     autoDeploy: false

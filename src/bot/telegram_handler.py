@@ -1,5 +1,7 @@
 import logging
 import re
+import signal
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from src.database.models import TaskDatabase
@@ -10,7 +12,12 @@ import os
 if os.getenv('RENDER'):
     import sys
     sys.path.append('src/config')
-    import production as settings
+    try:
+        import render_production as settings
+        logger.info("🚀 Sử dụng cấu hình render_production")
+    except ImportError:
+        import production as settings
+        logger.info("📦 Sử dụng cấu hình production mặc định")
 else:
     from src.config import settings
 
@@ -26,6 +33,8 @@ class TelegramKanbanBot:
         self.db = TaskDatabase(settings.DB_PATH)
         self.ai_analyzer = TaskAIAnalyzer(settings.DB_PATH)
         self.my_user_id = settings.MY_USER_ID
+        self.application = None
+        self._shutdown_event = asyncio.Event()
         
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handler cho lệnh /start"""
@@ -403,7 +412,7 @@ class TelegramKanbanBot:
         return False
     
     def run(self):
-        """Chạy bot"""
+        """Chạy bot với xử lý graceful shutdown"""
         try:
             # Kiểm tra bot token
             if not hasattr(settings, 'BOT_TOKEN') or not settings.BOT_TOKEN:
@@ -417,7 +426,7 @@ class TelegramKanbanBot:
                 proxy_url = f"http://{settings.PROXY_HOST}:{settings.PROXY_PORT}"
                 
                 # Tạo application với proxy
-                application = (
+                self.application = (
                     Application.builder()
                     .token(settings.BOT_TOKEN)
                     .proxy_url(proxy_url)
@@ -425,26 +434,122 @@ class TelegramKanbanBot:
                 )
             else:
                 logger.info("🌐 Không sử dụng proxy")
-                application = Application.builder().token(settings.BOT_TOKEN).build()
+                self.application = Application.builder().token(settings.BOT_TOKEN).build()
             
             # Đăng ký handlers
-            application.add_handler(CommandHandler("start", self.start_command))
-            application.add_handler(CommandHandler("help", self.help_command))
-            application.add_handler(CommandHandler("tasks", self.tasks_command))
-            application.add_handler(CommandHandler("ai", self.ai_suggestions_command))
-            application.add_handler(CommandHandler("insights", self.insights_command))
-            application.add_handler(CommandHandler("all", self.all_tasks_command))
-            application.add_handler(CommandHandler("stats", self.stats_command))
+            self.application.add_handler(CommandHandler("start", self.start_command))
+            self.application.add_handler(CommandHandler("help", self.help_command))
+            self.application.add_handler(CommandHandler("tasks", self.tasks_command))
+            self.application.add_handler(CommandHandler("ai", self.ai_suggestions_command))
+            self.application.add_handler(CommandHandler("insights", self.insights_command))
+            self.application.add_handler(CommandHandler("all", self.all_tasks_command))
+            self.application.add_handler(CommandHandler("stats", self.stats_command))
             
             # Handler cho tất cả messages
-            application.add_handler(MessageHandler(filters.ALL, self.handle_message))
+            self.application.add_handler(MessageHandler(filters.ALL, self.handle_message))
+            
+            # Đăng ký signal handlers cho graceful shutdown
+            self._setup_signal_handlers()
             
             logger.info("✅ Bot đã khởi động thành công")
-            application.run_polling(drop_pending_updates=True)
+            
+            # Kiểm tra xem có nên sử dụng webhook mode không
+            if (os.getenv('RENDER') and 
+                hasattr(settings, 'WEBHOOK_URL') and 
+                settings.WEBHOOK_URL):
+                logger.info("🌐 Sử dụng webhook mode trên Render.com")
+                self.run_webhook()
+            else:
+                # Sử dụng cấu hình polling an toàn hơn cho Render.com
+                if os.getenv('RENDER'):
+                    logger.info("🚀 Chạy trên Render.com - sử dụng cấu hình polling production")
+                    # Trên Render.com, sử dụng cấu hình polling an toàn hơn
+                    self.application.run_polling(
+                        drop_pending_updates=False,  # Không drop updates để tránh conflict
+                        allowed_updates=Update.ALL_TYPES,
+                        close_loop=False,
+                        stop_signals=(),  # Không sử dụng signal handlers mặc định
+                        read_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
+                        write_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
+                        connect_timeout=getattr(settings, 'CONNECTION_TIMEOUT', 30),
+                        pool_timeout=getattr(settings, 'POLLING_TIMEOUT', 30)
+                    )
+                else:
+                    logger.info("🏠 Chạy local - sử dụng cấu hình development")
+                    # Trên local, sử dụng cấu hình mặc định
+                    self.application.run_polling(drop_pending_updates=True)
             
         except Exception as e:
             logger.error(f"❌ Lỗi khởi động bot: {e}")
             raise
+    
+    def run_webhook(self):
+        """Chạy bot ở webhook mode (khuyến nghị cho Render.com)"""
+        try:
+            webhook_url = settings.WEBHOOK_URL
+            port = int(os.getenv('PORT', 8080))
+            
+            logger.info(f"🌐 Khởi động webhook mode trên port {port}")
+            logger.info(f"🔗 Webhook URL: {webhook_url}")
+            
+            # Thiết lập webhook
+            self.application.run_webhook(
+                listen="0.0.0.0",
+                port=port,
+                webhook_url=webhook_url,
+                drop_pending_updates=False,
+                allowed_updates=Update.ALL_TYPES
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Lỗi khi chạy webhook mode: {e}")
+            # Fallback về polling mode nếu webhook thất bại
+            logger.info("🔄 Fallback về polling mode...")
+            self.application.run_polling(
+                drop_pending_updates=False,
+                allowed_updates=Update.ALL_TYPES,
+                close_loop=False,
+                stop_signals=(),
+                read_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
+                write_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
+                connect_timeout=getattr(settings, 'CONNECTION_TIMEOUT', 30),
+                pool_timeout=getattr(settings, 'POLLING_TIMEOUT', 30)
+            )
+    
+    def _setup_signal_handlers(self):
+        """Thiết lập signal handlers cho graceful shutdown"""
+        def signal_handler(signum, frame):
+            logger.info(f"📡 Nhận signal {signum}, đang shutdown bot...")
+            self._shutdown_event.set()
+            if self.application:
+                asyncio.create_task(self._graceful_shutdown())
+        
+        # Đăng ký signal handlers
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
+        # Trên Windows
+        if hasattr(signal, 'SIGBREAK'):
+            signal.signal(signal.SIGBREAK, signal_handler)
+    
+    async def _graceful_shutdown(self):
+        """Shutdown bot một cách an toàn"""
+        try:
+            logger.info("🔄 Đang dừng bot...")
+            if self.application:
+                await self.application.stop()
+                await self.application.shutdown()
+            logger.info("✅ Bot đã shutdown thành công")
+        except Exception as e:
+            logger.error(f"❌ Lỗi khi shutdown bot: {e}")
+        finally:
+            # Đánh dấu shutdown hoàn tất
+            self._shutdown_event.set()
+    
+    async def stop_bot(self):
+        """Phương thức để dừng bot từ bên ngoài"""
+        logger.info("🛑 Dừng bot theo yêu cầu...")
+        await self._graceful_shutdown()
 
 if __name__ == "__main__":
     bot = TelegramKanbanBot()
