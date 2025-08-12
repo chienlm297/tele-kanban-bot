@@ -1,11 +1,11 @@
 import logging
 import re
 import signal
-import asyncio
 import os
 import sys
+from datetime import datetime
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Add src to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -36,16 +36,16 @@ class TelegramKanbanBot:
         self.db = TaskDatabase(settings.DB_PATH)
         self.ai_analyzer = TaskAIAnalyzer(settings.DB_PATH)
         self.my_user_id = settings.MY_USER_ID
-        self.application = None
-        self._shutdown_event = asyncio.Event()
+        self.updater = None
+        self.dispatcher = None
         
-    async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def start_command(self, update: Update, context: CallbackContext):
         """Handler cho lệnh /start"""
         if update.effective_user.id != self.my_user_id:
-            await update.message.reply_text("Xin lỗi, bot này chỉ dành cho chủ sở hữu.")
+            update.message.reply_text("Xin lỗi, bot này chỉ dành cho chủ sở hữu.")
             return
             
-        await update.message.reply_text(
+        update.message.reply_text(
                     "🤖 *Kanban Bot đã sẵn sàng!*\n\n"
                     "Bot sẽ tự động:\n"
                     "• Tạo task khi bạn được tag trong nhóm (lặng lẽ lưu vào danh sách)\n"
@@ -61,7 +61,7 @@ class TelegramKanbanBot:
                     parse_mode='Markdown'
                 )
     
-    async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def help_command(self, update: Update, context: CallbackContext):
         """Handler cho lệnh /help"""
         if update.effective_user.id != self.my_user_id:
             return
@@ -93,9 +93,9 @@ class TelegramKanbanBot:
 
 *Lưu ý:* Bot chỉ hoạt động với chủ sở hữu (bạn).
         """
-        await update.message.reply_text(help_text, parse_mode='Markdown')
+        update.message.reply_text(help_text, parse_mode='Markdown')
     
-    async def tasks_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def tasks_command(self, update: Update, context: CallbackContext):
         """Handler cho lệnh /tasks - hiển thị tasks chưa hoàn thành"""
         if update.effective_user.id != self.my_user_id:
             return
@@ -103,7 +103,7 @@ class TelegramKanbanBot:
         tasks = self.db.get_pending_tasks()
         
         if not tasks:
-            await update.message.reply_text("🎉 Tuyệt vời! Bạn không có công việc nào đang chờ.")
+            update.message.reply_text("🎉 Tuyệt vời! Bạn không có công việc nào đang chờ.")
             return
         
         message = f"📋 *Danh sách công việc ({len(tasks)} việc):*\n\n"
@@ -126,9 +126,9 @@ class TelegramKanbanBot:
         
         # Escape markdown special characters in dynamic content
         safe_message = message.replace('*', '\\*').replace('_', '\\_').replace('[', '\\[').replace(']', '\\]')
-        await update.message.reply_text(safe_message, parse_mode='Markdown')
+        update.message.reply_text(safe_message, parse_mode='Markdown')
     
-    async def ai_suggestions_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def ai_suggestions_command(self, update: Update, context: CallbackContext):
         """Handler cho lệnh /ai - hiển thị AI suggestions"""
         if update.effective_user.id != self.my_user_id:
             return
@@ -136,7 +136,7 @@ class TelegramKanbanBot:
         suggestions = self.ai_analyzer.get_smart_suggestions(5)
         
         if not suggestions:
-            await update.message.reply_text("🎉 Tuyệt vời! AI không có gợi ý ưu tiên nào - bạn đã hoàn thành hết việc quan trọng!")
+            update.message.reply_text("🎉 Tuyệt vời! AI không có gợi ý ưu tiên nào - bạn đã hoàn thành hết việc quan trọng!")
             return
         
         message = f"🤖 *AI Smart Suggestions* (Top {len(suggestions)})\n\n"
@@ -163,7 +163,7 @@ class TelegramKanbanBot:
         
         message += "💡 *Tip:* Sử dụng /tasks để xem tất cả tasks hoặc truy cập web dashboard để quản lý chi tiết!"
         
-        await update.message.reply_text(message, parse_mode='Markdown')
+        update.message.reply_text(message, parse_mode='Markdown')
     
     def _get_priority_emoji(self, score: float) -> str:
         """Get emoji based on priority score"""
@@ -176,7 +176,7 @@ class TelegramKanbanBot:
         else:
             return "📋"
     
-    async def insights_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def insights_command(self, update: Update, context: CallbackContext):
         """Handler cho lệnh /insights - hiển thị productivity insights"""
         if update.effective_user.id != self.my_user_id:
             return
@@ -206,9 +206,9 @@ class TelegramKanbanBot:
         
         message += "💡 *Tip:* Truy cập web dashboard để xem phân tích chi tiết hơn!"
         
-        await update.message.reply_text(message, parse_mode='Markdown')
+        update.message.reply_text(message, parse_mode='Markdown')
     
-    async def all_tasks_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def all_tasks_command(self, update: Update, context: CallbackContext):
         """Handler cho lệnh /all - hiển thị tất cả tasks"""
         if update.effective_user.id != self.my_user_id:
             return
@@ -216,13 +216,13 @@ class TelegramKanbanBot:
         tasks = self.db.get_all_tasks(50)  # Giới hạn 50 tasks gần nhất
         
         if not tasks:
-            await update.message.reply_text("Chưa có công việc nào được ghi nhận.")
+            update.message.reply_text("Chưa có công việc nào được ghi nhận.")
             return
         
         message = f"📊 *Tất cả công việc ({len(tasks)} việc gần nhất):*\n\n"
         
         for i, task in enumerate(tasks, 1):
-            status_icon = "✅" if task['status'] == 'completed' else "⏳"
+            status_icon = "✅" if task['status'] == 'QUERY_COMPLETED' else "⏳"
             chat_title = task['chat_title'] or "Chat riêng"
             created_date = task['created_at'][:10]
             
@@ -238,9 +238,9 @@ class TelegramKanbanBot:
                 message += "... (và nhiều hơn nữa)"
                 break
         
-        await update.message.reply_text(message, parse_mode='Markdown')
+        update.message.reply_text(message, parse_mode='Markdown')
     
-    async def stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def stats_command(self, update: Update, context: CallbackContext):
         """Handler cho lệnh /stats"""
         if update.effective_user.id != self.my_user_id:
             return
@@ -259,9 +259,9 @@ class TelegramKanbanBot:
 💪 *Tỷ lệ hoàn thành:* {(stats['completed'] / max(stats['total'], 1) * 100):.1f}%
         """
         
-        await update.message.reply_text(message, parse_mode='Markdown')
+        update.message.reply_text(message, parse_mode='Markdown')
     
-    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def handle_message(self, update: Update, context: CallbackContext):
         """Handler cho tất cả messages"""
         try:
             message = update.message
@@ -270,14 +270,14 @@ class TelegramKanbanBot:
             
             # Kiểm tra xem có phải message trong group không
             if chat.type in ['group', 'supergroup']:
-                await self.handle_group_message(update, context)
+                self.handle_group_message(update, context)
             elif user.id == self.my_user_id:
-                await self.handle_private_message(update, context)
+                self.handle_private_message(update, context)
                 
         except Exception as e:
             logger.error(f"Lỗi xử lý message: {e}")
     
-    async def handle_group_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def handle_group_message(self, update: Update, context: CallbackContext):
         """Xử lý message trong group"""
         message = update.message
         user = update.effective_user
@@ -330,13 +330,13 @@ class TelegramKanbanBot:
             else:
                 logger.info(f"❌ Không tìm thấy task để hoàn thành")
     
-    async def handle_private_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def handle_private_message(self, update: Update, context: CallbackContext):
         """Xử lý message riêng từ chủ sở hữu"""
         message = update.message
         
         # Có thể thêm các lệnh đặc biệt ở đây
         if message.text and message.text.lower() in ['tasks', 'task']:
-            await self.tasks_command(update, context)
+            self.tasks_command(update, context)
     
     def is_tagged_in_message(self, message) -> bool:
         """Kiểm tra xem mình có được tag trong message không"""
@@ -425,34 +425,36 @@ class TelegramKanbanBot:
             if hasattr(settings, 'PROXY_ENABLED') and settings.PROXY_ENABLED:
                 logger.info(f"🌐 Sử dụng proxy: {settings.PROXY_URL}")
                 
-                # Cấu hình proxy cho python-telegram-bot
+                # Cấu hình proxy cho python-telegram-bot v13
                 proxy_url = f"http://{settings.PROXY_HOST}:{settings.PROXY_PORT}"
                 
-                # Tạo application với proxy
-                self.application = (
-                    Application.builder()
-                    .token(settings.BOT_TOKEN)
-                    .proxy_url(proxy_url)
-                    .build()
+                # Tạo updater với proxy
+                self.updater = Updater(
+                    token=settings.BOT_TOKEN,
+                    use_context=True,
+                    request_kwargs={'proxy_url': proxy_url}
                 )
             else:
                 logger.info("🌐 Không sử dụng proxy")
-                self.application = Application.builder().token(settings.BOT_TOKEN).build()
+                self.updater = Updater(token=settings.BOT_TOKEN, use_context=True)
+            
+            # Lấy dispatcher
+            self.dispatcher = self.updater.dispatcher
             
             # Đăng ký handlers
-            self.application.add_handler(CommandHandler("start", self.start_command))
-            self.application.add_handler(CommandHandler("help", self.help_command))
-            self.application.add_handler(CommandHandler("tasks", self.tasks_command))
-            self.application.add_handler(CommandHandler("ai", self.ai_suggestions_command))
-            self.application.add_handler(CommandHandler("insights", self.insights_command))
-            self.application.add_handler(CommandHandler("all", self.all_tasks_command))
-            self.application.add_handler(CommandHandler("stats", self.stats_command))
+            self.dispatcher.add_handler(CommandHandler("start", self.start_command))
+            self.dispatcher.add_handler(CommandHandler("help", self.help_command))
+            self.dispatcher.add_handler(CommandHandler("tasks", self.tasks_command))
+            self.dispatcher.add_handler(CommandHandler("ai", self.ai_suggestions_command))
+            self.dispatcher.add_handler(CommandHandler("insights", self.insights_command))
+            self.dispatcher.add_handler(CommandHandler("all", self.all_tasks_command))
+            self.dispatcher.add_handler(CommandHandler("stats", self.stats_command))
             
             # Handler cho tất cả messages
-            self.application.add_handler(MessageHandler(filters.ALL, self.handle_message))
+            self.dispatcher.add_handler(MessageHandler(filters.ALL, self.handle_message))
             
             # Đăng ký error handler để xử lý Conflict
-            self.application.add_error_handler(self.error_handler)
+            self.dispatcher.add_error_handler(self.error_handler)
             
             # Đăng ký signal handlers cho graceful shutdown
             self._setup_signal_handlers()
@@ -470,26 +472,27 @@ class TelegramKanbanBot:
                 if os.getenv('RENDER'):
                     logger.info("🚀 Chạy trên Render.com - sử dụng cấu hình polling production")
                     # Trên Render.com, sử dụng cấu hình polling an toàn hơn
-                    self.application.run_polling(
+                    self.updater.start_polling(
                         drop_pending_updates=False,  # Không drop updates để tránh conflict
-                        allowed_updates=Update.ALL_TYPES,
-                        close_loop=False,
-                        stop_signals=(),  # Không sử dụng signal handlers mặc định
-                        read_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
-                        write_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
-                        connect_timeout=getattr(settings, 'CONNECTION_TIMEOUT', 30),
-                        pool_timeout=getattr(settings, 'POLLING_TIMEOUT', 30)
+                        timeout=30,
+                        read_timeout=30,
+                        write_timeout=30,
+                        connect_timeout=30,
+                        pool_timeout=30
                     )
                 else:
                     logger.info("🏠 Chạy local - sử dụng cấu hình development")
                     # Trên local, sử dụng cấu hình mặc định
-                    self.application.run_polling(drop_pending_updates=True)
+                    self.updater.start_polling(drop_pending_updates=True)
+            
+            # Giữ bot chạy
+            self.updater.idle()
             
         except Exception as e:
             logger.error(f"❌ Lỗi khởi động bot: {e}")
             raise
     
-    async def error_handler(self, update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    def error_handler(self, update: object, context: CallbackContext) -> None:
         """Xử lý errors từ telegram bot"""
         try:
             # Log error
@@ -501,26 +504,16 @@ class TelegramKanbanBot:
                 logger.info("🔄 Đang thử khởi động lại bot sau 30 giây...")
                 
                 # Dừng bot hiện tại
-                if self.application:
-                    await self.application.stop()
+                if self.updater:
+                    self.updater.stop()
                 
                 # Chờ 30 giây
-                import asyncio
-                await asyncio.sleep(30)
+                import time
+                time.sleep(30)
                 
                 # Khởi động lại bot
                 logger.info("🚀 Khởi động lại bot...")
-                await self.application.start()
-                await self.application.run_polling(
-                    drop_pending_updates=True,  # Drop updates khi restart
-                    allowed_updates=Update.ALL_TYPES,
-                    close_loop=False,
-                    stop_signals=(),
-                    read_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
-                    write_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
-                    connect_timeout=getattr(settings, 'CONNECTION_TIMEOUT', 30),
-                    pool_timeout=getattr(settings, 'POLLING_TIMEOUT', 30)
-                )
+                self.updater.start_polling(drop_pending_updates=True)
             else:
                 # Xử lý các lỗi khác
                 logger.error(f"❌ Lỗi không xác định: {context.error}")
@@ -538,36 +531,27 @@ class TelegramKanbanBot:
             logger.info(f"🔗 Webhook URL: {webhook_url}")
             
             # Thiết lập webhook
-            self.application.run_webhook(
+            self.updater.bot.set_webhook(url=webhook_url)
+            self.updater.start_webhook(
                 listen="0.0.0.0",
                 port=port,
-                webhook_url=webhook_url,
-                drop_pending_updates=False,
-                allowed_updates=Update.ALL_TYPES
+                url_path="",
+                drop_pending_updates=False
             )
             
         except Exception as e:
             logger.error(f"❌ Lỗi khi chạy webhook mode: {e}")
             # Fallback về polling mode nếu webhook thất bại
             logger.info("🔄 Fallback về polling mode...")
-            self.application.run_polling(
-                drop_pending_updates=False,
-                allowed_updates=Update.ALL_TYPES,
-                close_loop=False,
-                stop_signals=(),
-                read_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
-                write_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
-                connect_timeout=getattr(settings, 'CONNECTION_TIMEOUT', 30),
-                pool_timeout=getattr(settings, 'POLLING_TIMEOUT', 30)
-            )
+            self.updater.start_polling(drop_pending_updates=False)
     
     def _setup_signal_handlers(self):
         """Thiết lập signal handlers cho graceful shutdown"""
         def signal_handler(signum, frame):
             logger.info(f"📡 Nhận signal {signum}, đang shutdown bot...")
-            self._shutdown_event.set()
-            if self.application:
-                asyncio.create_task(self._graceful_shutdown())
+            if self.updater:
+                self.updater.stop()
+            logger.info("✅ Bot đã shutdown thành công")
         
         # Đăng ký signal handlers
         signal.signal(signal.SIGINT, signal_handler)
@@ -577,24 +561,11 @@ class TelegramKanbanBot:
         if hasattr(signal, 'SIGBREAK'):
             signal.signal(signal.SIGBREAK, signal_handler)
     
-    async def _graceful_shutdown(self):
-        """Shutdown bot một cách an toàn"""
-        try:
-            logger.info("🔄 Đang dừng bot...")
-            if self.application:
-                await self.application.stop()
-                await self.application.shutdown()
-            logger.info("✅ Bot đã shutdown thành công")
-        except Exception as e:
-            logger.error(f"❌ Lỗi khi shutdown bot: {e}")
-        finally:
-            # Đánh dấu shutdown hoàn tất
-            self._shutdown_event.set()
-    
-    async def stop_bot(self):
+    def stop_bot(self):
         """Phương thức để dừng bot từ bên ngoài"""
         logger.info("🛑 Dừng bot theo yêu cầu...")
-        await self._graceful_shutdown()
+        if self.updater:
+            self.updater.stop()
 
 if __name__ == "__main__":
     bot = TelegramKanbanBot()

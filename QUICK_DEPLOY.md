@@ -49,6 +49,7 @@ python test_imports.py
 - ✅ `ModuleNotFoundError: No module named 'database'`
 - ✅ `ModuleNotFoundError: No module named 'production'`
 - ✅ `ModuleNotFoundError: No module named 'render_production'`
+- ✅ `'Updater' object has no attribute '_Updater__polling_cleanup_cb'` (downgrade python-telegram-bot v13.15)
 
 ### **Lỗi khác:**
 - Đảm bảo sử dụng `python main.py --mode both`
