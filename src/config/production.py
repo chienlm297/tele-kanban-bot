@@ -8,10 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-BOT_TOKEN = TELEGRAM_BOT_TOKEN  # Alias for compatibility
-if not TELEGRAM_BOT_TOKEN:
-    print("⚠️  Warning: TELEGRAM_BOT_TOKEN environment variable is not set!")
+BOT_TOKEN = os.getenv('BOT_TOKEN', '')
+if not BOT_TOKEN:
+    print("⚠️  Warning: BOT_TOKEN environment variable is not set!")
 
 # Web Configuration
 WEB_PORT = int(os.getenv('PORT', 10000))
@@ -48,7 +47,7 @@ else:
     PROXY_DICT = None
 
 print(f"🌍 Production Environment Loaded")
-print(f"📡 Bot Token: {'✅ Set' if TELEGRAM_BOT_TOKEN else '❌ Missing'}")
+print(f"📡 Bot Token: {'✅ Set' if BOT_TOKEN else '❌ Missing'}")
 print(f"🌐 Web Port: {WEB_PORT}")
 print(f"🗄️  Database: {DATABASE_PATH}")
 print(f"🔗 Proxy: {'✅ Enabled' if PROXY_ENABLED else '❌ Disabled'}")

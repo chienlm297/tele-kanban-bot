@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 # Import settings from config package sau khi đã có logger
 if os.getenv('RENDER'):
     try:
-        import render_production as settings
+        from config import render_production as settings
         logger.info("🚀 Sử dụng cấu hình render_production")
     except ImportError:
-        import production as settings
+        from config import production as settings
         logger.info("📦 Sử dụng cấu hình production mặc định")
 else:
     from config import settings

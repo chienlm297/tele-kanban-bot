@@ -12,9 +12,9 @@ from ai.analyzer import TaskAIAnalyzer
 # Import settings from config package
 if os.getenv('RENDER'):
     try:
-        import render_production as settings
+        from config import render_production as settings
     except ImportError:
-        import production as settings
+        from config import production as settings
 else:
     from config import settings
 

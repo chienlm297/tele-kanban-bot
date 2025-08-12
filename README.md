@@ -52,9 +52,10 @@ MY_USERNAME=your_telegram_username
 ```
 
 ### **🔧 Nếu gặp lỗi khi deploy:**
-- Xem file `TROUBLESHOOTING_RENDER.md` để khắc phục
+- Xem file `QUICK_DEPLOY.md` để khắc phục
 - Đảm bảo sử dụng `python main.py --mode both`
 - Kiểm tra environment variables đầy đủ
+- **✅ Tất cả các lỗi import đã được sửa!**
 
 ---
 

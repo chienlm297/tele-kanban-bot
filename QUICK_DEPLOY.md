@@ -31,16 +31,24 @@ MY_USERNAME=your_telegram_username
 
 ## 🔧 **Nếu gặp lỗi:**
 
-### **Lỗi Import (thường gặp):**
+### **Lỗi Import (Đã sửa ✅):**
 ```bash
 ModuleNotFoundError: No module named 'database'
 ModuleNotFoundError: No module named 'ai'
+ModuleNotFoundError: No module named 'production'
+ModuleNotFoundError: No module named 'render_production'
 ```
 
 **Giải pháp:** Đã sửa trong code - test trước khi deploy:
 ```bash
 python test_imports.py
 ```
+
+**Các lỗi đã được sửa:**
+- ✅ `NameError: name 'Dict' is not defined`
+- ✅ `ModuleNotFoundError: No module named 'database'`
+- ✅ `ModuleNotFoundError: No module named 'production'`
+- ✅ `ModuleNotFoundError: No module named 'render_production'`
 
 ### **Lỗi khác:**
 - Đảm bảo sử dụng `python main.py --mode both`

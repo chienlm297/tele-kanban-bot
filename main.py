@@ -27,8 +27,8 @@ sys.path.insert(0, current_dir)
 def run_bot():
     """Chạy Telegram bot"""
     try:
-        from src.bot.telegram_handler import TelegramKanbanBot
-        from src.config import settings
+        from bot.telegram_handler import TelegramKanbanBot
+        from config import settings
         
         logger.info("🤖 Khởi động Telegram Bot...")
         
@@ -48,8 +48,8 @@ def run_bot():
 def run_dashboard():
     """Chạy web dashboard"""
     try:
-        from src.config import settings
-        from src.web.dashboard import app
+        from config import settings
+        from web.dashboard import app
         logger.info("🌐 Khởi động Web Dashboard...")
         
         # Production mode: sử dụng PORT từ environment
