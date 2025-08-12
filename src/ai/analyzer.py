@@ -1,8 +1,14 @@
 import sqlite3
 import logging
 import re
+import os
+import sys
 from datetime import datetime, timedelta
 from typing import Dict, List
+
+# Add src to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from database.models import TaskDatabase
 import json
 

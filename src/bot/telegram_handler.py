@@ -2,11 +2,16 @@ import logging
 import re
 import signal
 import asyncio
+import os
+import sys
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+
+# Add src to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from database.models import TaskDatabase
 from ai.analyzer import TaskAIAnalyzer
-import os
 
 # Thiết lập logging trước
 logging.basicConfig(
@@ -17,8 +22,6 @@ logger = logging.getLogger(__name__)
 
 # Import settings from config package sau khi đã có logger
 if os.getenv('RENDER'):
-    import sys
-    sys.path.append('src/config')
     try:
         import render_production as settings
         logger.info("🚀 Sử dụng cấu hình render_production")

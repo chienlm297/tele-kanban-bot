@@ -1,13 +1,16 @@
 from flask import Flask, render_template, jsonify, request
-from database.models import TaskDatabase
-from ai.analyzer import TaskAIAnalyzer
 import requests
 import os
+import sys
+
+# Add src to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from database.models import TaskDatabase
+from ai.analyzer import TaskAIAnalyzer
 
 # Import settings from config package
 if os.getenv('RENDER'):
-    import sys
-    sys.path.append('src/config')
     try:
         import render_production as settings
     except ImportError:

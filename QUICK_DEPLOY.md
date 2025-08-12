@@ -30,9 +30,22 @@ MY_USERNAME=your_telegram_username
 - Không cần làm gì thêm!
 
 ## 🔧 **Nếu gặp lỗi:**
-- Xem file `TROUBLESHOOTING_RENDER.md`
+
+### **Lỗi Import (thường gặp):**
+```bash
+ModuleNotFoundError: No module named 'database'
+ModuleNotFoundError: No module named 'ai'
+```
+
+**Giải pháp:** Đã sửa trong code - test trước khi deploy:
+```bash
+python test_imports.py
+```
+
+### **Lỗi khác:**
 - Đảm bảo sử dụng `python main.py --mode both`
 - Kiểm tra environment variables đầy đủ
+- Xem logs trong Render dashboard
 
 ---
 
