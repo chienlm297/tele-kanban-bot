@@ -33,3 +33,7 @@ Pillow>=10.4.0
 # - re (built-in Python module)
 # - logging (built-in Python module)
 # - argparse (built-in Python module)
+
+# Compatibility dependencies for python-telegram-bot v13.15
+urllib3==1.26.18
+APScheduler==3.6.3

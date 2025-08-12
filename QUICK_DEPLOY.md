@@ -57,6 +57,7 @@ python test_render_deps.py
 - ✅ `'Updater' object has no attribute '_Updater__polling_cleanup_cb'` (downgrade python-telegram-bot v13.15)
 - ✅ `No module named 'imghdr'` (sử dụng render_requirements.txt)
 - ✅ `module 'telegram.ext.filters' has no attribute 'ALL'` (sửa thành `Filters.all`)
+- ✅ `Updater.start_polling() got an unexpected keyword argument 'read_timeout'` (sửa parameters cho v13.15)
 
 ### **Lỗi khác:**
 - Đảm bảo sử dụng `python main.py --mode both`

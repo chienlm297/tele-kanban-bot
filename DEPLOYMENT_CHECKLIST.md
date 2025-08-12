@@ -7,6 +7,7 @@
 - [x] **Test imports** thành công với `python test_imports.py` ✅
 - [x] **Updater compatibility** - Downgraded python-telegram-bot to v13.15 ✅
 - [x] **Filters compatibility** - Fixed `filters.ALL` to `Filters.all` for v13.15 ✅
+- [x] **Polling parameters** - Fixed start_polling() arguments for v13.15 ✅
 - [x] **Dependencies compatibility** - Created render_requirements.txt for Render.com ✅
 - [x] **Render dependencies test** - Test với `python test_render_deps.py` ✅
 - [ ] **Environment variables** đã chuẩn bị:

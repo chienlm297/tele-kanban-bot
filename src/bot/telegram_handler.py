@@ -474,11 +474,7 @@ class TelegramKanbanBot:
                     # Trên Render.com, sử dụng cấu hình polling an toàn hơn
                     self.updater.start_polling(
                         drop_pending_updates=False,  # Không drop updates để tránh conflict
-                        timeout=30,
-                        read_timeout=30,
-                        write_timeout=30,
-                        connect_timeout=30,
-                        pool_timeout=30
+                        timeout=30
                     )
                 else:
                     logger.info("🏠 Chạy local - sử dụng cấu hình development")
@@ -513,7 +509,7 @@ class TelegramKanbanBot:
                 
                 # Khởi động lại bot
                 logger.info("🚀 Khởi động lại bot...")
-                self.updater.start_polling(drop_pending_updates=True)
+                self.updater.start_polling(drop_pending_updates=True, timeout=30)
             else:
                 # Xử lý các lỗi khác
                 logger.error(f"❌ Lỗi không xác định: {context.error}")
@@ -543,7 +539,7 @@ class TelegramKanbanBot:
             logger.error(f"❌ Lỗi khi chạy webhook mode: {e}")
             # Fallback về polling mode nếu webhook thất bại
             logger.info("🔄 Fallback về polling mode...")
-            self.updater.start_polling(drop_pending_updates=False)
+            self.updater.start_polling(drop_pending_updates=False, timeout=30)
     
     def _setup_signal_handlers(self):
         """Thiết lập signal handlers cho graceful shutdown"""

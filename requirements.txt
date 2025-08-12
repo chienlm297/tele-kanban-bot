@@ -17,3 +17,7 @@ gunicorn==21.2.0
 
 # Additional dependencies for Render.com
 Pillow>=10.4.0
+
+# Compatibility dependencies for python-telegram-bot v13.15
+urllib3==1.26.18
+APScheduler==3.6.3
