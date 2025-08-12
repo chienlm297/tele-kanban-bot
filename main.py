@@ -68,9 +68,25 @@ def run_dashboard():
 def check_dependencies():
     """Kiểm tra dependencies"""
     try:
-        import telegram
+        # Kiểm tra các dependencies chính
         import flask
         import requests
+        
+        # Kiểm tra python-telegram-bot
+        try:
+            import telegram
+            logger.info("✅ python-telegram-bot imported successfully")
+        except ImportError as e:
+            logger.error(f"❌ python-telegram-bot import failed: {e}")
+            return False
+        
+        # Kiểm tra các dependencies khác
+        try:
+            import PIL
+            logger.info("✅ Pillow (PIL) imported successfully")
+        except ImportError:
+            logger.warning("⚠️ Pillow not found, some image features may not work")
+        
         return True
     except ImportError as e:
         logger.error(f"❌ Thiếu dependencies: {e}")

@@ -55,7 +55,8 @@ MY_USERNAME=your_telegram_username
 - Xem file `QUICK_DEPLOY.md` để khắc phục
 - Đảm bảo sử dụng `python main.py --mode both`
 - Kiểm tra environment variables đầy đủ
-- **✅ Tất cả các lỗi import và Updater compatibility đã được sửa!**
+- **✅ Tất cả các lỗi import, Updater compatibility và dependencies đã được sửa!**
+- **📦 Sử dụng `render_requirements.txt` cho Render.com deployment**
 
 ---
 

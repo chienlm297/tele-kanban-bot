@@ -41,7 +41,11 @@ ModuleNotFoundError: No module named 'render_production'
 
 **Giải pháp:** Đã sửa trong code - test trước khi deploy:
 ```bash
+# Test cơ bản
 python test_imports.py
+
+# Test đầy đủ cho Render.com
+python test_render_deps.py
 ```
 
 **Các lỗi đã được sửa:**
@@ -50,6 +54,7 @@ python test_imports.py
 - ✅ `ModuleNotFoundError: No module named 'production'`
 - ✅ `ModuleNotFoundError: No module named 'render_production'`
 - ✅ `'Updater' object has no attribute '_Updater__polling_cleanup_cb'` (downgrade python-telegram-bot v13.15)
+- ✅ `No module named 'imghdr'` (sử dụng render_requirements.txt)
 
 ### **Lỗi khác:**
 - Đảm bảo sử dụng `python main.py --mode both`
