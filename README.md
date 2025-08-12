@@ -39,6 +39,25 @@ run.bat
 
 ---
 
+## 🚀 **Deploy trên Render.com (Production)**
+
+### **⚡ Deploy nhanh (3 bước)**
+Xem file `QUICK_DEPLOY.md` để deploy trong 5 phút!
+
+### **📋 Environment Variables cần thiết:**
+```bash
+BOT_TOKEN=your_bot_token_here
+MY_USER_ID=your_telegram_user_id
+MY_USERNAME=your_telegram_username
+```
+
+### **🔧 Nếu gặp lỗi khi deploy:**
+- Xem file `TROUBLESHOOTING_RENDER.md` để khắc phục
+- Đảm bảo sử dụng `python main.py --mode both`
+- Kiểm tra environment variables đầy đủ
+
+---
+
 ## 🎯 **Tính năng nổi bật**
 
 ### 🚀 **Auto-Refresh & Real-Time Updates** ⭐ MỚI!

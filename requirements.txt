@@ -1,6 +1,16 @@
-python-telegram-bot==20.1
-flask==2.3.3
+# Core dependencies
+python-telegram-bot==20.7
+flask==3.0.0
 python-dotenv==1.0.0
+
+# HTTP requests
 requests==2.31.0
+
+# Proxy support (if needed)
 python-socks==2.4.4
+
+# Markdown processing
 markdown2==2.4.10
+
+# Production server (optional)
+gunicorn==21.2.0
