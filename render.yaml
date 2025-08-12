@@ -3,7 +3,11 @@ services:
     name: tele-kanban-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py --mode both
+    # Chọn một trong các options sau:
+    startCommand: python scripts/start_both_fixed.py  # Option 1: Bot + Dashboard với conflict fix
+    # startCommand: python main.py --mode both        # Option 2: Bot + Dashboard (có thể gặp conflict)
+    # startCommand: python scripts/start_conflict_fix.py  # Option 3: Chỉ Bot với conflict fix
+    # startCommand: python scripts/start_dashboard_only.py  # Option 4: Chỉ Dashboard
     plan: free
     envVars:
       - key: PYTHON_VERSION

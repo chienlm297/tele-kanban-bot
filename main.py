@@ -123,10 +123,17 @@ def main():
             dashboard_thread.start()
             
             # Đợi dashboard khởi động
-            time.sleep(2)
+            time.sleep(3)
             
-            # Chạy bot trong main thread
-            run_bot()
+            # Kiểm tra dashboard có hoạt động không
+            if dashboard_thread.is_alive():
+                logger.info("✅ Dashboard đã khởi động thành công")
+            else:
+                logger.warning("⚠️ Dashboard có thể chưa khởi động hoàn toàn")
+            
+            # Chạy bot trong main thread với retry mechanism
+            logger.info("🤖 Khởi động Telegram Bot...")
+            run_bot_with_retry()
             
     except KeyboardInterrupt:
         logger.info("\n⏹️  Đang dừng...")
@@ -134,6 +141,56 @@ def main():
         logger.error(f"❌ Lỗi: {e}")
         import traceback
         traceback.print_exc()
+
+def run_bot_with_retry():
+    """Chạy bot với retry mechanism để xử lý conflict"""
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            logger.info(f"🤖 Khởi động Telegram Bot lần {retry_count + 1}/{max_retries}")
+            
+            # Import bot
+            from src.bot.telegram_handler import TelegramKanbanBot
+            from src.config import settings
+            
+            # Hiển thị thông tin proxy nếu có
+            if hasattr(settings, 'PROXY_ENABLED') and settings.PROXY_ENABLED:
+                logger.info(f"🌐 Sử dụng proxy: {settings.PROXY_URL}")
+            else:
+                logger.info("🌐 Không sử dụng proxy (môi trường nhà)")
+            
+            bot = TelegramKanbanBot()
+            bot.run()
+            
+        except Exception as e:
+            retry_count += 1
+            error_msg = str(e)
+            
+            if "Conflict" in error_msg:
+                logger.warning(f"⚠️ Conflict error lần {retry_count}: {error_msg}")
+                if retry_count < max_retries:
+                    logger.info("🔄 Đang chờ 30 giây trước khi thử lại...")
+                    time.sleep(30)
+                else:
+                    logger.error("❌ Đã thử tối đa, bot không thể khởi động")
+                    logger.info("🌐 Dashboard vẫn hoạt động bình thường")
+                    break
+                    
+            elif "Forbidden" in error_msg:
+                logger.error("❌ Bot bị block hoặc token không hợp lệ")
+                break
+                
+            else:
+                logger.error(f"❌ Lỗi khác lần {retry_count}: {error_msg}")
+                if retry_count < max_retries:
+                    logger.info("🔄 Đang chờ 15 giây trước khi thử lại...")
+                    time.sleep(15)
+                else:
+                    logger.error("❌ Đã thử tối đa, bot không thể khởi động")
+                    logger.info("🌐 Dashboard vẫn hoạt động bình thường")
+                    break
 
 if __name__ == "__main__":
     main()

@@ -448,6 +448,9 @@ class TelegramKanbanBot:
             # Handler cho tất cả messages
             self.application.add_handler(MessageHandler(filters.ALL, self.handle_message))
             
+            # Đăng ký error handler để xử lý Conflict
+            self.application.add_error_handler(self.error_handler)
+            
             # Đăng ký signal handlers cho graceful shutdown
             self._setup_signal_handlers()
             
@@ -482,6 +485,45 @@ class TelegramKanbanBot:
         except Exception as e:
             logger.error(f"❌ Lỗi khởi động bot: {e}")
             raise
+    
+    async def error_handler(self, update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Xử lý errors từ telegram bot"""
+        try:
+            # Log error
+            logger.error(f"❌ Exception while handling an update: {context.error}")
+            
+            # Xử lý Conflict error đặc biệt
+            if "Conflict" in str(context.error):
+                logger.warning("⚠️ Phát hiện Conflict error - có thể có nhiều instance bot")
+                logger.info("🔄 Đang thử khởi động lại bot sau 30 giây...")
+                
+                # Dừng bot hiện tại
+                if self.application:
+                    await self.application.stop()
+                
+                # Chờ 30 giây
+                import asyncio
+                await asyncio.sleep(30)
+                
+                # Khởi động lại bot
+                logger.info("🚀 Khởi động lại bot...")
+                await self.application.start()
+                await self.application.run_polling(
+                    drop_pending_updates=True,  # Drop updates khi restart
+                    allowed_updates=Update.ALL_TYPES,
+                    close_loop=False,
+                    stop_signals=(),
+                    read_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
+                    write_timeout=getattr(settings, 'POLLING_TIMEOUT', 30),
+                    connect_timeout=getattr(settings, 'CONNECTION_TIMEOUT', 30),
+                    pool_timeout=getattr(settings, 'POLLING_TIMEOUT', 30)
+                )
+            else:
+                # Xử lý các lỗi khác
+                logger.error(f"❌ Lỗi không xác định: {context.error}")
+                
+        except Exception as e:
+            logger.error(f"❌ Lỗi trong error handler: {e}")
     
     def run_webhook(self):
         """Chạy bot ở webhook mode (khuyến nghị cho Render.com)"""
