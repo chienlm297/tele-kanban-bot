@@ -1,7 +1,7 @@
-import re
-import datetime
-from typing import List, Dict, Tuple
-from src.database.models import TaskDatabase
+import sqlite3
+import logging
+from datetime import datetime, timedelta
+from database.models import TaskDatabase
 import json
 
 class TaskAIAnalyzer:
@@ -122,8 +122,8 @@ class TaskAIAnalyzer:
     def _analyze_task_age(self, created_at: str) -> float:
         """Phân tích độ tuổi của task (task cũ hơn = ưu tiên cao hơn)"""
         try:
-            created_time = datetime.datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-            now = datetime.datetime.now(created_time.tzinfo)
+            created_time = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            now = datetime.now(created_time.tzinfo)
             age_hours = (now - created_time).total_seconds() / 3600
             
             # Tasks cũ hơn 24h có priority cao hơn
@@ -197,8 +197,8 @@ class TaskAIAnalyzer:
         
         # Phân tích thời gian
         try:
-            created_time = datetime.datetime.fromisoformat(task['created_at'].replace('Z', '+00:00'))
-            now = datetime.datetime.now(created_time.tzinfo)
+            created_time = datetime.fromisoformat(task['created_at'].replace('Z', '+00:00'))
+            now = datetime.now(created_time.tzinfo)
             age_hours = (now - created_time).total_seconds() / 3600
             
             if age_hours > 48:
@@ -222,8 +222,8 @@ class TaskAIAnalyzer:
         for task in completed_tasks:
             if task['completed_at'] and task['created_at']:
                 try:
-                    created = datetime.datetime.fromisoformat(task['created_at'].replace('Z', '+00:00'))
-                    completed = datetime.datetime.fromisoformat(task['completed_at'].replace('Z', '+00:00'))
+                    created = datetime.fromisoformat(task['created_at'].replace('Z', '+00:00'))
+                    completed = datetime.fromisoformat(task['completed_at'].replace('Z', '+00:00'))
                     hours = (completed - created).total_seconds() / 3600
                     completion_times.append(hours)
                 except:
@@ -254,7 +254,7 @@ class TaskAIAnalyzer:
         hourly_completion = {}
         for task in completed_tasks:
             try:
-                completed_time = datetime.datetime.fromisoformat(task['completed_at'].replace('Z', '+00:00'))
+                completed_time = datetime.fromisoformat(task['completed_at'].replace('Z', '+00:00'))
                 hour = completed_time.hour
                 hourly_completion[hour] = hourly_completion.get(hour, 0) + 1
             except:

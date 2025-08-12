@@ -4,8 +4,8 @@ import signal
 import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from src.database.models import TaskDatabase
-from src.ai.analyzer import TaskAIAnalyzer
+from database.models import TaskDatabase
+from ai.analyzer import TaskAIAnalyzer
 import os
 
 # Thiết lập logging trước
@@ -26,7 +26,7 @@ if os.getenv('RENDER'):
         import production as settings
         logger.info("📦 Sử dụng cấu hình production mặc định")
 else:
-    from src.config import settings
+    from config import settings
 
 class TelegramKanbanBot:
     def __init__(self):

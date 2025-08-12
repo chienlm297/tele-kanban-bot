@@ -46,6 +46,7 @@ def run_dashboard():
         
         logger.info(f"📁 Đã thêm path: {src_path}")
         logger.info(f"📁 Python path: {sys.path[:3]}")
+        logger.info(f"📁 Current working directory: {os.getcwd()}")
         
         # Import dashboard
         try:
@@ -56,7 +57,18 @@ def run_dashboard():
             logger.error(f"📁 Current working directory: {os.getcwd()}")
             logger.error(f"📁 Script directory: {Path(__file__).parent}")
             logger.error(f"📁 Src directory: {src_path}")
-            raise
+            
+            # Thử thêm path khác
+            alt_path = Path(__file__).parent.parent
+            sys.path.insert(0, str(alt_path))
+            logger.info(f"📁 Thử thêm path khác: {alt_path}")
+            
+            try:
+                from src.web.dashboard import app
+                logger.info("✅ Import dashboard thành công với path khác")
+            except ImportError as e2:
+                logger.error(f"❌ Vẫn lỗi import: {e2}")
+                raise e2
         
         # Lấy port từ environment
         port = int(os.getenv('PORT', 10000))
@@ -95,7 +107,18 @@ def run_bot_with_retry():
             except ImportError as e:
                 logger.error(f"❌ Lỗi import bot: {e}")
                 logger.error(f"📁 Python path: {sys.path[:3]}")
-                raise
+                
+                # Thử thêm path khác
+                alt_path = Path(__file__).parent.parent
+                sys.path.insert(0, str(alt_path))
+                logger.info(f"📁 Thử thêm path khác cho bot: {alt_path}")
+                
+                try:
+                    from src.bot.telegram_handler import TelegramKanbanBot
+                    logger.info("✅ Import bot thành công với path khác")
+                except ImportError as e2:
+                    logger.error(f"❌ Vẫn lỗi import bot: {e2}")
+                    raise e2
             
             # Tạo và chạy bot
             bot = TelegramKanbanBot()
