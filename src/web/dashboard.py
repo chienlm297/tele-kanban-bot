@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request
-from src.database.models import TaskDatabase
-from src.ai.analyzer import TaskAIAnalyzer
+from database.models import TaskDatabase
+from ai.analyzer import TaskAIAnalyzer
 import requests
 import os
 
@@ -8,9 +8,12 @@ import os
 if os.getenv('RENDER'):
     import sys
     sys.path.append('src/config')
-    import production as settings
+    try:
+        import render_production as settings
+    except ImportError:
+        import production as settings
 else:
-    from src.config import settings
+    from config import settings
 
 app = Flask(__name__, template_folder='../../templates')
 db = TaskDatabase(settings.DB_PATH)
