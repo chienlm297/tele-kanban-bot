@@ -5,7 +5,7 @@ import os
 import sys
 from datetime import datetime
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 # Add src to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -451,7 +451,7 @@ class TelegramKanbanBot:
             self.dispatcher.add_handler(CommandHandler("stats", self.stats_command))
             
             # Handler cho tất cả messages
-            self.dispatcher.add_handler(MessageHandler(filters.ALL, self.handle_message))
+            self.dispatcher.add_handler(MessageHandler(Filters.all, self.handle_message))
             
             # Đăng ký error handler để xử lý Conflict
             self.dispatcher.add_error_handler(self.error_handler)

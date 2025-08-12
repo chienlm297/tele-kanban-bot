@@ -56,6 +56,7 @@ python test_render_deps.py
 - ✅ `ModuleNotFoundError: No module named 'render_production'`
 - ✅ `'Updater' object has no attribute '_Updater__polling_cleanup_cb'` (downgrade python-telegram-bot v13.15)
 - ✅ `No module named 'imghdr'` (sử dụng render_requirements.txt)
+- ✅ `module 'telegram.ext.filters' has no attribute 'ALL'` (sửa thành `Filters.all`)
 
 ### **Lỗi khác:**
 - Đảm bảo sử dụng `python main.py --mode both`
