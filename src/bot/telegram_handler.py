@@ -8,7 +8,14 @@ from src.database.models import TaskDatabase
 from src.ai.analyzer import TaskAIAnalyzer
 import os
 
-# Import settings from config package
+# Thiết lập logging trước
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# Import settings from config package sau khi đã có logger
 if os.getenv('RENDER'):
     import sys
     sys.path.append('src/config')
@@ -20,13 +27,6 @@ if os.getenv('RENDER'):
         logger.info("📦 Sử dụng cấu hình production mặc định")
 else:
     from src.config import settings
-
-# Thiết lập logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
 
 class TelegramKanbanBot:
     def __init__(self):

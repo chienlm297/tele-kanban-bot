@@ -3,7 +3,7 @@ services:
     name: tele-kanban-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python scripts/start_bot_render.py
+    startCommand: python main.py --mode both
     plan: free
     envVars:
       - key: PYTHON_VERSION
@@ -18,4 +18,6 @@ services:
         value: "30"
       - key: CONNECTION_TIMEOUT
         value: "30"
+      - key: BOT_TOKEN
+        value: "your_bot_token_here"
     autoDeploy: false

@@ -1,1 +1,1 @@
-# Tele Kanban Bot Package
+# Tele Kanban Bot - Main Package

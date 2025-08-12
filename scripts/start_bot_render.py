@@ -10,11 +10,7 @@ import time
 import logging
 from pathlib import Path
 
-# Thêm src vào Python path
-src_path = Path(__file__).parent.parent / "src"
-sys.path.insert(0, str(src_path))
-
-# Thiết lập logging
+# Thiết lập logging trước
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -34,20 +30,35 @@ def main():
             logger.error(f"❌ Thiếu environment variables: {missing_vars}")
             sys.exit(1)
         
+        # Thêm src vào Python path
+        src_path = Path(__file__).parent.parent / "src"
+        sys.path.insert(0, str(src_path))
+        
+        logger.info(f"📁 Đã thêm path: {src_path}")
+        
         # Import bot sau khi đã thiết lập path
-        from src.bot.telegram_handler import TelegramKanbanBot
+        try:
+            from src.bot.telegram_handler import TelegramKanbanBot
+            logger.info("✅ Import TelegramKanbanBot thành công")
+        except ImportError as e:
+            logger.error(f"❌ Lỗi import TelegramKanbanBot: {e}")
+            logger.error(f"📁 Python path: {sys.path}")
+            raise
         
         # Tạo instance bot
         bot = TelegramKanbanBot()
+        logger.info("✅ Bot instance đã được tạo")
         
         # Khởi động bot
-        logger.info("✅ Bot instance đã được tạo, đang khởi động...")
+        logger.info("🚀 Đang khởi động bot...")
         bot.run()
         
     except KeyboardInterrupt:
         logger.info("📱 Bot được dừng bởi người dùng")
     except Exception as e:
         logger.error(f"❌ Lỗi khởi động bot: {e}")
+        logger.error(f"📋 Chi tiết lỗi: {type(e).__name__}: {str(e)}")
+        
         # Trên Render.com, không exit để tránh restart liên tục
         if os.getenv('RENDER'):
             logger.info("🔄 Đang chờ restart trên Render.com...")
